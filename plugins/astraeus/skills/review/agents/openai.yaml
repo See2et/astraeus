@@ -1,0 +1,6 @@
+interface:
+  display_name: "Astraeus independent review"
+  short_description: "Evidence-based review in a fresh context"
+  default_prompt: "Use $astraeus:review to independently review this change."
+policy:
+  allow_implicit_invocation: false

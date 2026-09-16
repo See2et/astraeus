@@ -1,0 +1,25 @@
+{
+  "name": "astraeus",
+  "version": "0.1.0",
+  "description": "Adaptive native Codex delegation and independent review, led by Astra.",
+  "author": {
+    "name": "See2et"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Astraeus",
+    "shortDescription": "Delegate deliberately. Review independently.",
+    "longDescription": "Lightweight autonomous orchestration with dynamic model routing, output contracts, and bounded independent review.",
+    "developerName": "See2et",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use Astraeus to implement and independently review this task."
+    ]
+  },
+  "license": "MIT"
+}

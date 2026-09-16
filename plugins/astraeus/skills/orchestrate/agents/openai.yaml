@@ -1,0 +1,6 @@
+interface:
+  display_name: "Astraeus"
+  short_description: "Adaptive delegation with independent acceptance"
+  default_prompt: "Use $astraeus:orchestrate for this task."
+policy:
+  allow_implicit_invocation: true

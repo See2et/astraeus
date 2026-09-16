@@ -1,0 +1,20 @@
+{
+  "name": "astraeus",
+  "interface": {
+    "displayName": "Astraeus"
+  },
+  "plugins": [
+    {
+      "name": "astraeus",
+      "source": {
+        "source": "local",
+        "path": "./plugins/astraeus"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
