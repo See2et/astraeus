@@ -21,8 +21,15 @@ Delegate only when a bounded outcome, adequate context, and an acceptance check 
 be stated and the benefit exceeds handoff/integration cost. No fixed agent count,
 role-to-model assignment, or mandatory search/thinking sequence. Keep coupled decisions
 with the root. Give each writer disjoint ownership; preserve existing user changes.
-The implementer also owns ordinary verification. Root checks the diff and evidence;
-rerun checks only for integration changes, missing evidence, or a concrete concern.
+Once the goal, scope, constraints, and acceptance check are clear enough to delegate,
+stop root discovery and hand off; do not solve implementation details first. Resolve
+coupled requirements or architecture at the root when they are needed for that handoff.
+Keep discovery, implementation, and ordinary verification for a bounded outcome with
+one owner, including follow-up fixes; do not split agents merely by phase. The owner
+returns specification decisions to the root and handles local implementation choices.
+Root checks the diff, verification evidence, and remaining issues. Repeat discovery
+or checks only for integration changes, failed checks, missing evidence, or a concrete
+concern; name the trigger and limit the follow-up to the affected scope.
 
 ## Routing
 
@@ -55,9 +62,11 @@ Respect project restrictions and user pins. Explain material routing changes bri
 
 Before dispatch, state the task, requested model/effort, and one-line reason. Supply
 only the goal, scope/ownership, constraints, acceptance evidence, and useful output
-contract. For a fresh-context review do not fork implementation conversation; use
-`fork_turns: "none"` only where the live schema supports it, or the host's documented
-equivalent. Workers may receive context appropriate to their task. Do not ask children
+contract. Start independent bounded work with fresh context by default, supplying
+relevant files, decisions, and constraints rather than the full conversation. Inherit
+conversation only when needed to preserve material context, and keep it to the minimum
+supported extent. For reviews, never fork the implementation conversation. Use
+`fork_turns: "none"` where supported, or the host's documented equivalent. Do not ask children
 to spawn more agents; root owns delegation and the finite budget.
 
 For consequential changes, use [independent review](../review/SKILL.md) after ordinary

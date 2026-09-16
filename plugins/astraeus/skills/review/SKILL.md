@@ -12,7 +12,13 @@ verification, against an identified stable target including relevant untracked f
 Use a fresh native agent with no implementation conversation. Provide the original
 requirements, constraints, exact target, relevant code, and verification evidence.
 Do not prime the reviewer with the implementer's confidence or proposed verdict.
-The reviewer may inspect context beyond the diff when needed to understand behavior.
+Focus on requirements, behavior put at risk by the change, and gaps in verification.
+The handoff should identify affected behavior and risk areas without prescribing
+findings; the reviewer independently checks coverage and may inspect beyond the diff
+for dependencies or risks the handoff missed. Do not request unrelated improvement
+searches or redesign. Reuse ordinary verification evidence unless a concrete concern
+or evidence gap requires a targeted check; independence requires independent judgment,
+not routine repetition of the implementer's tests.
 
 Choose model/effort using the orchestrate routing guidance; difficult design or visual
 judgment favors Astra. Tell the reviewer: do not edit files, implement fixes, or spawn

@@ -10,6 +10,18 @@ cost receipt. Simple work stays with the root. Implementers own ordinary tests.
 Design judgment and visual acceptance favor Astra, including inspection of rendered
 artifacts when another model implements the design.
 
+To avoid duplicate work, root stops discovery once the goal, scope, constraints, and
+acceptance check are clear enough to delegate. One owner keeps bounded discovery,
+implementation, ordinary verification, and follow-up fixes. Independent work starts
+with fresh context containing relevant files, decisions, and constraints; conversation
+inheritance is reserved for necessary context. Root inspects diffs, evidence, and open
+issues, repeating discovery or checks only for integration changes, failed checks,
+missing evidence, or concrete concerns in the affected scope. Independent review
+focuses on requirements, behavior at risk, and verification gaps, following dependencies
+as needed, without unrelated improvement searches or redesign. Review requirements
+remain unchanged. These practices reduce duplication; they do not guarantee Pro quota
+savings.
+
 ## Install and enable across projects
 
 Requires a current Codex CLI with native subagents and plugin commands (tested with
