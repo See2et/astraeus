@@ -5,7 +5,8 @@ description: Apply Astraeus orchestration policy autonomously to project work wh
 
 # Astraeus
 
-The root Astra owns requirements, architecture, routing, integration, and acceptance.
+The user owns product intent and scope; root Astra interprets the authorized requirements
+and owns architecture, routing, integration, and final acceptance within that scope.
 Keep the user's root model/effort. If host metadata shows a non-Astra root, disclose
 the mismatch; do not claim Astra judgment or silently switch models. Unknown is unknown.
 Use native Codex agents only, with the actual exposed tool names and schema. No nested
@@ -16,6 +17,13 @@ just to follow this skill. For consequential work, read [policy](../../reference
 and the project's explicit `astraeus.toml` if present (use `doctor` to validate it).
 Do not search parent directories or personal skills for more policy. Explicit user
 constraints and Codex permissions remain authoritative.
+
+For behavior changes, establish the intended outcome, acceptance conditions, non-goals,
+and contracts to preserve from the request and relevant evidence. Clear requests need
+no extra approval or permanent spec file. Use [requirements and tests](../../references/requirements-and-tests.md)
+when existing behavior/tests constrain a change, a test fails, or verification is added,
+changed, or removed. Inspect only the affected area. Code, tests, and agent suggestions
+describe current behavior; they do not by themselves authorize requirements.
 
 Delegate only when a bounded outcome, adequate context, and an acceptance check can
 be stated and the benefit exceeds handoff/integration cost. No fixed agent count,
@@ -70,13 +78,14 @@ supported extent. For reviews, never fork the implementation conversation. Use
 to spawn more agents; root owns delegation and the finite budget.
 
 For consequential changes, use [independent review](../review/SKILL.md) after ordinary
-verification. This includes behavior/API/compatibility, data, permissions, installation,
+verification, then a separate [adjudicator](../adjudicate/SKILL.md) before adopting any
+finding or accepting the work. This includes behavior/API/compatibility, data, permissions, installation,
 or meaningful multi-component changes. Trivial spelling/format-only edits may finish
 solo. Apply additional mandatory paths from project policy. Root decides borderline
 cases with a short reason; optional polish never becomes a new acceptance gate.
 
 Read [contracts](../../references/contracts.md) only when structured output helps.
-Review always uses its contract. Other small tasks may return concise prose.
+Review and adjudication always use their contracts. Other small tasks may return concise prose.
 Report outcomes and missing checks, not raw work logs. Separate requested values from
 host-observed values and their sources; child self-identification is not host evidence.
 Never claim enforced read-only or generation-time schema guarantees from instructions.

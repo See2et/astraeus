@@ -1,4 +1,30 @@
-# Verification record — 2026-09-16
+# Verification record
+
+## 2026-10-01 update
+
+The workflow now separates review findings from adoption decisions and checks the
+requirement basis of affected behavior/tests. Current acceptance uses adjudication
+plus its original review; the review-only `--accept` commands in the historical record
+below describe the earlier interface, not the current one.
+
+A fresh-context native agent requested as Astra/high applied the new guidance to four
+bounded fixtures. It rejected speculative simultaneous coin input and restoration of
+explicitly retired CSV export, adopted a reproduced document-loss fix despite 80 passing
+happy-path tests, and required investigation for an unverified signup fallback dependency.
+It preserved the distinction between rejecting a remedy and accepting the whole change.
+This was a read-only simulation using supplied fixture facts, not independently reproduced
+product behavior or proof of automatic activation. No ambiguity prevented disposition.
+Host-observed realized model/effort and per-agent read-only enforcement remain unknown.
+
+Local verification for this update: the unit suite covers review/adjudication binding,
+complete dispositions, acceptance consistency, strict receipts, and legacy CLI migration.
+The isolated real-CLI smoke test passed installation (including the new skill/schema),
+refresh, reset, source checks, activation/removal, and preservation of unrelated state.
+The plugin and all three skills passed their official structural validators; example
+policy validation and `git diff --check` passed. These deterministic checks do not prove
+that arbitrary model decisions are correct or that all future tasks will obey the skills.
+
+### Earlier verification — 2026-09-16
 
 ## Confirmed locally
 
@@ -80,7 +106,9 @@ python3 tests/smoke_plugin.py
 
 To test live integration after installing and opening a new session: ask for a narrow
 exploration using exploration.json; validate and use its evidence. Then have a fresh
-reviewer inspect a bounded change using review.json. Validate against a newly computed
-target ID with `--accept`; confirm a seeded bug gives changes_required and missing
-evidence gives inconclusive. Observe no-edit behavior without claiming an enforced
+reviewer inspect a bounded change using review.json, followed by a distinct adjudicator
+using adjudication.json and the original review. Validate the adjudication against a
+newly computed target ID with `--review-result <original-review> --accept`; confirm a
+seeded bug requires a fix, an unsupported requirement can be rejected, and missing
+evidence remains inconclusive. Observe no-edit behavior without claiming an enforced
 sandbox unless the host exposes evidence. Live tests consume the user's Codex allowance.

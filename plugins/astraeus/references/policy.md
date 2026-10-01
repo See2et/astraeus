@@ -14,6 +14,23 @@ semantics (`*` can cross `/`); these add review requirements, never remove risk-
 Global activation applies everywhere unless a higher-priority or explicit instruction
 disables it. Do not make global edits or install anything while executing ordinary work.
 
+Each complete independent review is followed by one separate fresh adjudicator before
+fixes or acceptance, including a review with no findings. `review_limit` still bounds
+reviewer dispatches (maximum two); adjudicator dispatches are separately capped at one
+per complete review and at the same total limit. Failed/malformed/interrupted attempts
+consume their role's slot; there are no hidden repair turns, reviewer/adjudicator debate
+loops, or recursive acceptance agents. Incomplete reviews first need evidence or the
+next review round. Use remaining rounds for an updated target/evidence; exhausted or
+unresolved work is incomplete until explicit user continuation grants a new finite budget.
+Trivial work that needs no independent review needs no adjudicator.
+
+Reviewer findings are proposals, not authorized requirements. Root checks an independent
+adjudicator's dispositions; only adopted fixes return to the original implementation
+owner. The user retains product scope authority. An adjudicator can reject unsupported
+claims, but cannot waive incomplete review coverage or invent approval to retire a
+real contract. See [adjudication](../skills/adjudicate/SKILL.md) and
+[requirements and tests](requirements-and-tests.md) for decision criteria.
+
 Check current spawn tool metadata once when needed and again only after capability
 changes/errors. Exact controls vary by host/version. Do not invent `response_format`,
 `sandbox`, or role arguments. A custom agent's configured model may override a spawn
@@ -37,8 +54,10 @@ state, or external services. Freeze concurrent writers while identifying/reviewi
 a target; recheck identity before acceptance. Visual evidence must identify the
 rendered artifact and relevant viewports/pages, not merely point to source code.
 
-Record task ID, attempt count, target ID, selected reviewer and results in ordinary
+Record task ID, role-specific attempt counts, target ID, selected reviewer/adjudicator,
+the original review's content hash, and results in ordinary
 task context. If context compaction would lose this, save a short local note under
 ignored `.astraeus/`. No mandatory ledger for solo work and no custom session database.
-The checker does not independently enforce review budgets or discover consequential
-changes: those remain explicit root responsibilities.
+The checker binds adjudication to the exact supplied review and checks disposition
+coverage and acceptance consistency. It does not authenticate rationale, host receipts,
+role independence, or budgets, or discover consequential changes: root checks those.

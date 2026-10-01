@@ -56,6 +56,8 @@ def main():
         installed = manage("install")
         installed_path = Path(json.loads(installed["outputs"][-1])["installedPath"])
         assert (installed_path / "skills/orchestrate/SKILL.md").is_file()
+        assert (installed_path / "skills/adjudicate/SKILL.md").is_file()
+        assert (installed_path / "schemas/adjudication.json").is_file()
         skill = source / "plugins/astraeus/skills/orchestrate/SKILL.md"
         skill.write_text(skill.read_text() + "\nSmoke refresh marker.\n")
         refreshed = manage("refresh")

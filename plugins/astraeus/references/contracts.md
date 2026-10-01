@@ -1,7 +1,7 @@
 # Output contracts
 
 Contracts describe results, never the agent's private reasoning or search sequence.
-Read only the relevant schema under `../schemas/`. Review requires JSON; exploration,
+Read only the relevant schema under `../schemas/`. Review and adjudication require JSON; exploration,
 research, and implementation may use concise prose when parsing offers little value.
 Empty lists are valid where there is nothing to report. Do not manufacture findings.
 
@@ -14,6 +14,7 @@ Common fields: `schema_version: 1`, `kind`, `task_id`, `target_id`, `status`
 | research | `conclusions`, `sources` (URL, applicable version, checked date, support), `uncertainties` |
 | implementation | `changed_files`, `checks` (command, outcome, evidence), `remaining` |
 | review | `verdict`, `violations`, `bugs`, `suggestions`, `checked_scope`, `evidence`, `unresolved` |
+| adjudication | `verdict`, `review_sha256`, `decisions`, `checked_scope`, `evidence`, `unresolved` |
 
 Review findings contain `location`, `claim`, `evidence`. Suggestions are short strings.
 `verdict` is `pass|changes_required|inconclusive`. Missing evidence/coverage or unresolved
@@ -21,22 +22,46 @@ questions require inconclusive. A valid changes_required/inconclusive reply is u
 data, not acceptance. The implementer returns what actually ran, including failures.
 Research sources must support the attached claim; a URL's existence is not proof.
 
+Adjudication decisions have `ref`, `action`, `basis`, `evidence`, and `rationale`.
+`ref` addresses the original review's array and zero-based index, e.g. `bugs/0`.
+Every item of `violations`, `bugs`, `suggestions`, and `unresolved` must be covered
+exactly once; no invented or duplicate references. `basis` states the requirement's
+authority or why it is not warranted. `action` is `fix|investigate|reject|human_decision`.
+Bind `review_sha256` to `sha256:` followed by the hex SHA-256 of the exact review file
+bytes (compute with Python hashlib or a system SHA-256 tool; do not guess the hash).
+Preserve original review files; edited findings require a new adjudication.
+
+The adjudication verdict is `accept|changes_required|inconclusive`. `accept` requires
+complete status, scope/evidence, no unresolved matters, and only rejected findings
+(or no findings). Source review must be complete with scope/evidence, not inconclusive,
+and have no unresolved matters. `changes_required` requires adopted fixes and no pending
+investigations/human decisions. Pending decisions or evidence make it `inconclusive`.
+A complete review's `changes_required` may lead to adjudication `accept` if every claim
+is rejected on evidence. Validators check consistency, not the truth of this judgment.
+
 Native spawn has no assumed schema-enforcement capability. Put the relevant shape in
 the prompt, state that enforcement is unavailable when it is, and validate the return:
 
 ```sh
 uv run <plugin>/scripts/astraeus.py validate-result .astraeus/result.json \
-  --kind review --task-id task-1 --target-id <current-target> --accept
+  --kind review --task-id task-1 --target-id <current-target>
+
+uv run <plugin>/scripts/astraeus.py validate-result .astraeus/adjudication.json \
+  --kind adjudication --task-id task-1 --target-id <current-target> \
+  --review-result .astraeus/result.json --accept
 ```
 
 `uv run` installs only the declared JSON Schema validator dependency, not any model
 runtime. Alternatively install jsonschema in your Python environment and use python3.
-For non-review roles omit `--accept`; inspect status and evidence before integration.
-No `--accept` means format/semantic validation only (exit 0 does NOT mean pass).
+`--review-result` is required for adjudication, even without `--accept`.
+`--accept` is now only for adjudication; legacy review-only acceptance commands fail
+explicitly. Review v1 files remain valid inputs. For other roles omit `--accept`;
+inspect status and evidence before integration. No `--accept` means format/semantic
+validation only (exit 0 does NOT mean acceptance).
 
 The host receipt is separate from the child's contract. A child must not invent
-runtime confirmation. Strict acceptance also requires `--assurance strict --receipt`
-with JSON shaped as:
+runtime confirmation. Strict adjudication requires `--assurance strict --receipt`
+for the adjudicator and `--review-receipt` for the reviewer, each with JSON shaped as:
 
 ```json
 {"requested":{"model":"gpt-6-astra","effort":"high"},
@@ -47,3 +72,5 @@ with JSON shaped as:
 The checker verifies consistency of supplied data; it cannot authenticate the receipt.
 Root must obtain it from the host, never fabricate it or accept child self-report.
 Do not collect extra telemetry merely to fill a receipt under reported assurance.
+Root also verifies the agents are distinct, the dispatch budgets were respected, and
+the target and original review are still current. No receipt proves those by itself.

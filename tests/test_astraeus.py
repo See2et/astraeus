@@ -21,36 +21,61 @@ def review():
                 evidence=["Empty input is rejected at parse.py:12; regression check passed."], unresolved=[])
 
 
+def decision(ref, action="reject"):
+    return dict(ref=ref, action=action,
+                basis="The user request and repository contract determine whether this finding is required.",
+                evidence="The cited requirement and implementation were checked directly.",
+                rationale="This disposition follows from the checked authority and evidence.")
+
+
+def adjudication(review_path, decisions=None, **changes):
+    data = dict(schema_version=1, kind="adjudication", task_id="t1", target_id="state1",
+                status="complete", summary="Adjudicated every source finding.", verdict="accept",
+                review_sha256="sha256:" + a.hashlib.sha256(review_path.read_bytes()).hexdigest(),
+                decisions=[] if decisions is None else decisions,
+                checked_scope=["Original request and review findings"],
+                evidence=["Compared every finding with the controlling requirement."], unresolved=[])
+    data.update(changes)
+    return data
+
+
 class ContractTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.path = Path(self.tmp.name) / "result.json"
+        self.review_path = Path(self.tmp.name) / "review.json"
 
-    def check(self, data, **kw):
+    def check_review(self, data, **kw):
         self.path.write_text(json.dumps(data))
         return a.validate_result(self.path, "review", "t1", "state1", **kw)
 
-    def test_pass_with_optional_suggestions(self):
+    def check_adjudication(self, data, source, **kw):
+        self.review_path.write_text(json.dumps(source))
+        if data is None:
+            data = adjudication(self.review_path)
+        self.path.write_text(json.dumps(data))
+        return a.validate_result(self.path, "adjudication", "t1", "state1",
+                                 review_result=self.review_path, **kw)
+
+    def test_review_pass_with_optional_suggestions_is_valid_input(self):
         data = review()
         data["suggestions"] = ["Optional: shorten the helper name."]
-        self.assertTrue(self.check(data, accept=True)["acceptance_checks_passed"])
+        self.assertFalse(self.check_review(data)["acceptance_checks_passed"])
 
-    def test_inconclusive_is_valid_but_not_acceptable(self):
+    def test_review_inconclusive_is_valid_input(self):
         data = review()
         data.update(verdict="inconclusive", unresolved=["Database was unavailable."])
-        self.assertFalse(self.check(data)["acceptance_checks_passed"])
-        with self.assertRaises(ValueError):
-            self.check(data, accept=True)
+        self.assertFalse(self.check_review(data)["acceptance_checks_passed"])
 
-    def test_false_passes_rejected(self):
+    def test_false_review_passes_rejected(self):
         modifications = [dict(status="blocked"), dict(evidence=[]), dict(checked_scope=[]),
                          dict(unresolved=["Missing evidence"]), dict(extra="ignored?"),
                          dict(target_id="stale"), dict(task_id="other"),
                          dict(bugs=[dict(location="p:1", claim="crashes", evidence="repro")])]
         for change in modifications:
             with self.subTest(change=change), self.assertRaises(ValueError):
-                self.check(review() | change, accept=True)
+                self.check_review(review() | change)
 
     def test_duplicate_json_keys_rejected(self):
         self.path.write_text('{"verdict":"pass","verdict":"inconclusive"}')
@@ -59,31 +84,141 @@ class ContractTests(unittest.TestCase):
 
     def test_changes_required_needs_concrete_finding(self):
         with self.assertRaises(ValueError):
-            self.check(review() | dict(verdict="changes_required"))
+            self.check_review(review() | dict(verdict="changes_required"))
 
-    def test_strict_requires_matching_host_evidence(self):
-        with self.assertRaises(ValueError):
-            self.check(review(), accept=True, assurance="strict")
-        receipt = Path(self.tmp.name) / "host.json"
-        data = dict(requested=dict(model="gpt-6-astra", effort="high"),
-                    observed=dict(model="gpt-6-astra", effort="high", sandbox="read-only"),
-                    source="host response thread 123")
-        receipt.write_text(json.dumps(data))
-        self.check(review(), accept=True, assurance="strict", receipt=receipt)
-        for change in (dict(model=None), dict(model="gpt-5.6-sol"), dict(sandbox="workspace-write")):
-            bad = copy.deepcopy(data)
-            bad["observed"].update(change)
-            receipt.write_text(json.dumps(bad))
-            with self.subTest(change=change), self.assertRaises(ValueError):
-                self.check(review(), accept=True, assurance="strict", receipt=receipt)
+    def test_rejected_invented_requirement_permits_acceptance(self):
+        source = review() | dict(
+            verdict="changes_required",
+            violations=[dict(location="README.md:1", claim="Add an unrequested badge.",
+                             evidence="The badge is absent.")])
+        self.review_path.write_text(json.dumps(source))
+        data = adjudication(self.review_path, [decision("violations/0")])
+        result = self.check_adjudication(data, source, accept=True)
+        self.assertTrue(result["acceptance_checks_passed"])
+
+    def test_fix_decision_requires_changes_even_without_accept_flag(self):
+        source = review() | dict(
+            verdict="changes_required",
+            bugs=[dict(location="parse.py:12", claim="Empty input crashes.", evidence="Reproduced.")])
+        self.review_path.write_text(json.dumps(source))
+        contradictory = adjudication(self.review_path, [decision("bugs/0", "fix")])
+        with self.assertRaisesRegex(ValueError, "accept requires"):
+            self.check_adjudication(contradictory, source)
+        required = contradictory | dict(verdict="changes_required")
+        self.assertFalse(self.check_adjudication(required, source)["acceptance_checks_passed"])
+        with self.assertRaisesRegex(ValueError, "does not accept"):
+            self.check_adjudication(required, source, accept=True)
+
+    def test_every_source_item_has_exactly_one_disposition(self):
+        source = review() | dict(
+            verdict="changes_required",
+            violations=[dict(location="a:1", claim="v", evidence="e")],
+            bugs=[dict(location="b:2", claim="b", evidence="e")],
+            suggestions=["s"], unresolved=["u"])
+        self.review_path.write_text(json.dumps(source))
+        complete = [decision("violations/0"), decision("bugs/0"),
+                    decision("suggestions/0"), decision("unresolved/0")]
+        cases = {
+            "omitted": complete[:-1],
+            "duplicate": complete + [decision("bugs/0")],
+            "unknown": complete[:-1] + [decision("unresolved/1")],
+        }
+        for name, decisions in cases.items():
+            data = adjudication(self.review_path, decisions, verdict="inconclusive",
+                                unresolved=["Source review remains unresolved."])
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.check_adjudication(data, source)
+
+    def test_source_hash_task_and_target_are_bound(self):
+        source = review()
+        self.review_path.write_text(json.dumps(source))
+        data = adjudication(self.review_path)
+        with self.assertRaisesRegex(ValueError, "hash mismatch"):
+            self.check_adjudication(data | dict(review_sha256="sha256:" + "0" * 64), source)
+        for change in (dict(task_id="other"), dict(target_id="stale")):
+            changed_source = source | change
+            self.review_path.write_text(json.dumps(changed_source))
+            changed_data = data | dict(
+                review_sha256="sha256:" + a.hashlib.sha256(self.review_path.read_bytes()).hexdigest())
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, "task or target mismatch"):
+                self.check_adjudication(changed_data, changed_source)
+
+    def test_incomplete_source_review_cannot_be_waived(self):
+        finding = [dict(location="p:1", claim="Needs change.", evidence="Observed.")]
+        variations = [
+            dict(status="blocked", verdict="changes_required", violations=finding),
+            dict(verdict="inconclusive", violations=finding),
+            dict(verdict="changes_required", violations=finding, unresolved=["Authority unknown."]),
+            dict(verdict="changes_required", violations=finding, evidence=[]),
+            dict(verdict="changes_required", violations=finding, checked_scope=[]),
+        ]
+        for change in variations:
+            source = review() | change
+            self.review_path.write_text(json.dumps(source))
+            data = adjudication(self.review_path, [decision("violations/0")])
+            if source["unresolved"]:
+                data["decisions"].append(decision("unresolved/0"))
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, "inconclusive"):
+                self.check_adjudication(data, source)
+
+    def test_pending_decisions_require_inconclusive(self):
+        source = review() | dict(suggestions=["Consider another design."])
+        self.review_path.write_text(json.dumps(source))
+        for action in ("investigate", "human_decision"):
+            data = adjudication(self.review_path, [decision("suggestions/0", action)])
+            with self.subTest(action=action), self.assertRaisesRegex(ValueError, "inconclusive"):
+                self.check_adjudication(data, source)
+            data.update(verdict="inconclusive", unresolved=["Decision remains pending."])
+            self.check_adjudication(data, source)
+
+    def test_strict_acceptance_requires_both_host_receipts(self):
+        source = review()
+        self.review_path.write_text(json.dumps(source))
+        data = adjudication(self.review_path)
+        receipt_data = dict(requested=dict(model="gpt-6-astra", effort="high"),
+                            observed=dict(model="gpt-6-astra", effort="high", sandbox="read-only"),
+                            source="host response thread 123")
+        receipt = Path(self.tmp.name) / "adjudicator-host.json"
+        review_receipt = Path(self.tmp.name) / "reviewer-host.json"
+        receipt.write_text(json.dumps(receipt_data))
+        review_receipt.write_text(json.dumps(receipt_data))
+        with self.assertRaisesRegex(ValueError, "requires --receipt"):
+            self.check_adjudication(data, source, accept=True, assurance="strict")
+        with self.assertRaisesRegex(ValueError, "requires --review-receipt"):
+            self.check_adjudication(data, source, accept=True, assurance="strict", receipt=receipt)
+        self.check_adjudication(data, source, accept=True, assurance="strict", receipt=receipt,
+                                review_receipt=review_receipt)
+        for option, path in (("--receipt", receipt), ("--review-receipt", review_receipt)):
+            for change in (dict(model=None), dict(model="gpt-5.6-sol"),
+                           dict(sandbox="workspace-write")):
+                bad = copy.deepcopy(receipt_data)
+                bad["observed"].update(change)
+                path.write_text(json.dumps(bad))
+                with self.subTest(option=option, change=change), self.assertRaisesRegex(ValueError, option):
+                    self.check_adjudication(data, source, accept=True, assurance="strict", receipt=receipt,
+                                            review_receipt=review_receipt)
+                path.write_text(json.dumps(receipt_data))
+
+    def test_legacy_review_accept_and_adjudication_only_arguments_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "only for adjudication"):
+            self.check_review(review(), accept=True)
+        with self.assertRaisesRegex(ValueError, "only for adjudication"):
+            self.check_review(review(), review_result=self.review_path)
+        self.path.write_text(json.dumps(review()))
+        with self.assertRaisesRegex(ValueError, "requires --review-result"):
+            a.validate_result(self.path, "adjudication", "t1", "state1")
 
     def test_all_schemas_and_examples(self):
         from jsonschema import Draft202012Validator, FormatChecker
-        for kind in ("review", "exploration", "research", "implementation"):
+        for kind in ("review", "adjudication", "exploration", "research", "implementation"):
             schema = a.read_json(a.PLUGIN / "schemas" / f"{kind}.json")
             Draft202012Validator.check_schema(schema)
             example = a.read_json(ROOT / "examples" / f"{kind}.json")
             Draft202012Validator(schema, format_checker=FormatChecker()).validate(example)
+        result = a.validate_result(ROOT / "examples/adjudication.json", "adjudication",
+                                   "example", "example-snapshot", accept=True,
+                                   review_result=ROOT / "examples/review.json")
+        self.assertTrue(result["acceptance_checks_passed"])
 
 
 class PolicyTests(unittest.TestCase):

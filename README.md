@@ -3,6 +3,10 @@
 Lightweight Codex CLI orchestration: Astra owns judgment and acceptance; native
 subagents take bounded work and independently review consequential changes.
 
+Review findings go to a separate fresh adjudicator before fixes or acceptance. It checks
+requirement authority, concrete impact, and proportionality; root owns final acceptance.
+Existing code and tests describe behavior, but do not by themselves make it a requirement.
+
 [日本語](README.ja.md) · [Design](docs/design.md) · [Verification](docs/verification.md)
 
 No model runtime, API authentication, daemon, fixed agent organization, or mandatory
@@ -73,8 +77,9 @@ judgment. These are heuristics, not performance measurements. Root can finish di
 Consequential behavior, compatibility, data, permissions, installation, and substantial
 cross-component changes require a fresh independent reviewer. Reviewers do not fix their
 findings. Optional improvements do not block acceptance. Maximum: **two total reviewer
-dispatches**, including failures (initial + one re-review). Unresolved or inconclusive
-results remain incomplete. Pinned models are never changed automatically.
+dispatches**, including failures (initial + one re-review). Each complete review has one
+separate adjudicator dispatch, capped at the same total limit including failures.
+Unresolved or inconclusive results remain incomplete. Pinned models are never changed automatically.
 
 ## Optional project policy
 
@@ -95,8 +100,8 @@ read-only; reviewers are instructed not to mutate through any tool.
 
 ## Result contracts
 
-Four JSON Schemas cover exploration, research, implementation, and review. Only review
-always requires structure. Small other tasks may return concise prose. Fields describe
+Five JSON Schemas cover exploration, research, implementation, review, and adjudication.
+Review and adjudication always require structure. Small other tasks may return concise prose. Fields describe
 outputs and evidence, never a prescribed thought process. See [contracts](plugins/astraeus/references/contracts.md).
 
 In a Git project, freeze writers, put results in an ignored `.astraeus/` directory,
@@ -106,19 +111,47 @@ and capture a target ID:
 python3 /path/to/plugin/scripts/astraeus.py target --repo /path/to/project
 ```
 
-Pass that ID and a task ID to the reviewer. Recompute the target after review; validate
-against that current value, not merely the ID the reviewer echoed:
+Pass that ID and a task ID to the reviewer, then the adjudicator along with the original
+review. Recompute the target before acceptance; validate against that current value,
+not merely the ID the agents echoed:
 
 ```sh
 uv run /path/to/plugin/scripts/astraeus.py validate-result .astraeus/review.json \
-  --kind review --task-id task-1 --target-id sha256:CURRENT_HASH --accept
+  --kind review --task-id task-1 --target-id sha256:CURRENT_HASH
+
+uv run /path/to/plugin/scripts/astraeus.py validate-result .astraeus/adjudication.json \
+  --kind adjudication --task-id task-1 --target-id sha256:CURRENT_HASH \
+  --review-result .astraeus/review.json --accept
 ```
 
 You can instead install `jsonschema` and use `python3`. Without `--accept`, exit 0 only
 means a valid result, including a valid failure/inconclusive result. `--accept` checks
-pass consistency but cannot prove truthful evidence, correct scope, independence, or
-review budget adherence; root must check those. Example JSON is illustrative, not a
+adjudication consistency, exact review identity, and disposition coverage, but cannot
+prove truthful evidence, correct scope, independence, or dispatch budget adherence;
+root must check those. Review v1 files remain valid; review-only `--accept` is deliberately
+rejected. Strict adjudication requires `--receipt` for the adjudicator and
+`--review-receipt` for the reviewer. Example JSON is illustrative, not a
 receipt for real work. Native spawn does not promise generation-time schema enforcement.
+
+## Requirements, findings, and tests
+
+The user owns product scope. Root derives the outcome, non-goals, acceptance conditions,
+and preserved contracts from the request and relevant evidence; clear requests need no
+extra approval. The implementation owner inspects affected tests/behavior, implements,
+and verifies. No full-repository inventory or mandatory new spec documents are required.
+
+Use `$astraeus:adjudicate` after independent review. Its dispositions are `fix`,
+`investigate`, `reject`, and `human_decision`. Only adopted fixes return to the original
+implementation owner. Speculative features, severity labels, or a test's existence do
+not authorize new requirements. Real consumers, data invariants, and published contracts
+still matter even when undocumented. Incomplete review evidence cannot be waived.
+
+Add tests for concrete requirements/risks and gaps in existing verification. When tests
+change or disappear, explain which behavior was intentionally retired or which remaining
+check protects its guarantee and regression value. Never weaken assertions just to pass,
+or restore obsolete behavior just because an old test failed. Unknown dependencies get
+bounded investigation; unauthorized product changes return to the user as grouped
+decisions. See [requirements and tests](plugins/astraeus/references/requirements-and-tests.md).
 
 ## Update and local development
 

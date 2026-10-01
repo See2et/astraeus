@@ -5,7 +5,8 @@ description: Conduct an explicitly requested independent review, or the required
 
 # Independent review
 
-Root remains the acceptance owner. Read [policy](../../references/policy.md) and
+Root remains the final acceptance owner; a separate adjudicator decides which findings
+warrant action before fixes or acceptance. Read [policy](../../references/policy.md) and
 [contracts](../../references/contracts.md). Start after implementation and ordinary
 verification, against an identified stable target including relevant untracked files.
 
@@ -29,27 +30,36 @@ limitations. `strict` requires host evidence for the requested model/effort and 
 sandbox; otherwise stop the affected review. A read-only shell sandbox does not prove
 MCP/connector operations are read-only: prohibit mutations through every tool.
 
+Use [requirements and tests](../../references/requirements-and-tests.md) when assessing
+existing behavior or verification. Identify the source of a claimed requirement and
+concrete impact in each finding's evidence. Tests and code alone are not authority to
+preserve behavior; inspect changed/deleted tests for retired contracts or replacement
+guarantees. Missing speculative test cases are not bugs. Actual data, security, or
+consumer failures still matter even when the request did not enumerate them.
+
 Return the review JSON contract. Separate requirement violations and concrete bugs
 from optional improvements. Every blocking finding needs a location, concrete claim,
 and evidence/reproduction. Do not turn preferences into bugs. Use `inconclusive` for
 missing evidence or incomplete coverage, never a speculative pass.
 
-Root validates the reply and checks evidence against the target. `pass` is necessary,
-not sufficient: require complete status, no violations/bugs/unresolved questions,
-real coverage and evidence, and unchanged target identity. A process exit code or a
+Root validates the reply and checks evidence against the target, then dispatches
+[adjudication](../adjudicate/SKILL.md) for every complete review, including `pass`.
+Do not automatically send findings to the implementer. Reviewer `pass` is neither
+final acceptance nor required when complete findings are rejected on evidence by the
+adjudicator. Incomplete coverage/evidence cannot be waived. A process exit code or a
 well-formed reply alone is not acceptance. Review existing user changes only to the
 extent required to assess the authorized change, and never claim credit for them.
 
 Hard limit: two total reviewer dispatches (initial + one re-review); project policy
 may lower it to one. Failed,
 interrupted, malformed, or inconclusive attempts consume a slot too. No hidden format
-repair turns or automatic resetting of the budget. For fixes, the implementer/root
-edits and verifies; a fresh reviewer checks the accumulated target with emphasis on
+repair turns or automatic resetting of the budget. For adopted fixes, the original
+implementation owner edits and verifies; a fresh reviewer checks the accumulated target with emphasis on
 fixed issues and affected behavior. A renewed prompt may include prior findings as
 issues to verify, without asserting their resolution. Do not repeat unrelated checks.
 
 Root may change unpinned models with a reason within the same requirements and budget.
 Never expand permissions, change billing routes, or widen scope to recover. If the
-budget is exhausted, evidence is missing, reviewers disagree unresolvedly, or the
+budget is exhausted, evidence is missing, review/adjudication disagree unresolvedly, or the
 target changed after review, report incomplete and the precise next decision needed.
 Explicit user continuation can authorize a new finite budget; it is not a pass.

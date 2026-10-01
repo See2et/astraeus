@@ -5,7 +5,7 @@ no-edit/schema instructions plus post-validation, finite recovery, and Astra pri
 for design and visual acceptance. The initial explicit-only activation proposal was
 replaced before implementation. No exec-based inference fallback is in this MVP.
 
-The core is two short skills. Detailed policy and contracts load only when useful.
+The core is orchestration, review, and adjudication skills. Detailed policy and contracts load only when useful.
 There are no persona stacks, fixed team sizes, forced exploration passes, or extra
 quality gates for optional improvements. Root remains free to reason, work alone,
 choose models/effort, and inspect evidence according to the task. Implementers test
@@ -16,6 +16,26 @@ requirements and the actual artifact, not the entire implementation conversation
 its confidence. A fresh context does not mean a different filesystem, immunity from
 shared project instructions, or independently verified model identity. Review remains
 an evidence-based judgment rather than an automatic proof of correctness.
+
+The user owns product intent and scope. A distinct fresh adjudicator assesses reviewer
+claims before fixes or acceptance, including clean reviews. It can reject a purported
+requirement using evidence; reviewer pass is no longer an unconditional veto or sole
+acceptance gate. Incomplete coverage/evidence still blocks acceptance. Root checks the
+adjudicator's reasons and owns final acceptance. Each reviewer round has at most one
+adjudicator; both roles have finite budgets. This is not a recursive agent debate.
+
+Existing code/tests are evidence of behavior, not sufficient authority to preserve it.
+Implementation owners inspect only affected contracts and tests, explain intentionally
+retired behavior or replacement guarantees, and add verification for concrete gaps.
+No test-count target, full-repository audit, mandatory per-test provenance migration,
+or extra inventory agent is introduced. Unknown dependencies require investigation,
+not speculative compatibility layers or indiscriminate deletion.
+
+Adjudication references every original finding by array/index and binds to the exact
+review file hash and task/target. The validator rejects omissions, stale reports, and
+contradictory acceptance states, but cannot prove the substance of decisions. Existing
+review v1 remains readable; review-only `--accept` intentionally fails with migration
+guidance. Strict adjudication needs both roles' independent host receipts.
 
 JSON Schema is used as a well-known result interface, validated by jsonschema rather
 than a home-grown schema interpreter. This adds one Python dependency only when result

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Astraeus review adjudication"
+  short_description: "Decide which review findings warrant action"
+  default_prompt: "Use $astraeus:adjudicate to assess this review against the authorized requirements."
