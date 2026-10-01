@@ -1,6 +1,6 @@
 # Astraeus
 
-Lightweight Codex CLI orchestration: Astra owns judgment and acceptance; native
+Lightweight Codex CLI orchestration: GPT-6.1 Sol root owns routing and final acceptance; native
 subagents take bounded work and independently review consequential changes.
 
 Review findings go to a separate fresh adjudicator before fixes or acceptance. It checks
@@ -45,12 +45,15 @@ The activation command previews by default. `--apply` appends a small managed bl
 `$CODEX_HOME/AGENTS.md` (default `~/.codex/AGENTS.md`), preserving existing text and saving
 a local backup when changing existing content. It never replaces your personal rules.
 The installed skill permits implicit invocation. Start a **new Codex session**, select
-Astra, and use any project normally. No explicit per-task command is required.
+GPT-6.1 Sol (`gpt-6.1-sol`), and use any project normally. No explicit per-task command is required.
 
 Global activation is an instruction policy, not a guaranteed host hook. An
 `AGENTS.override.md`, higher-priority instructions, disabled plugins, host truncation,
 or project instructions can affect loading/behavior. Check these if it does not apply.
 The plugin cannot silently change the root model or prove its realized identity.
+If the host does not expose GPT-6.1 Sol, disclose that it has not been selected; do not
+substitute GPT-5.6 Sol for it. Update the client if needed and select the requested model
+in a new session. Model availability still depends on the host and account.
 
 Once the repository contains a published commit, Git-source installation is also:
 
@@ -70,9 +73,10 @@ You can also explicitly invoke `$astraeus:orchestrate` for a task or
 then selects the model and supported effort from difficulty, risk, independence, and
 checkability. No fixed headcount, role/model mapping, or required search count.
 
-Luna suits narrow easily checked work; Terra bounded work requiring moderate judgment;
-Sol difficult dependencies or costly errors; fresh Astra deep/architectural or visual
-judgment. These are heuristics, not performance measurements. Root can finish directly.
+GPT-5.6 Luna suits narrow easily checked work; GPT-5.6 Terra bounded work requiring
+moderate judgment; GPT-5.6 Sol difficult dependencies or costly errors; fresh GPT-6 Astra
+deep/architectural or visual judgment. GPT-6.1 Sol handles root integration and acceptance.
+GPT-6 Luna is excluded from default routing; GPT-5.6 Luna remains available. These are heuristics, not performance measurements. Root can finish directly.
 
 Consequential behavior, compatibility, data, permissions, installation, and substantial
 cross-component changes require a fresh independent reviewer. Reviewers do not fix their

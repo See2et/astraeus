@@ -5,6 +5,12 @@ no-edit/schema instructions plus post-validation, finite recovery, and Astra pri
 for design and visual acceptance. The initial explicit-only activation proposal was
 replaced before implementation. No exec-based inference fallback is in this MVP.
 
+The preferred root is GPT-6.1 Sol, with GPT-6 Astra for deep/design/visual judgment
+and GPT-5.6 Sol/Terra/Luna for bounded delegated work. GPT-6 Luna is not a default
+candidate. Root owns final acceptance using Astra rendered-artifact evidence when
+appearance matters; root need not itself be Astra. These are instruction preferences,
+not a host model switch or proof of availability. Explicit pins remain authoritative.
+
 The core is orchestration, review, and adjudication skills. Detailed policy and contracts load only when useful.
 There are no persona stacks, fixed team sizes, forced exploration passes, or extra
 quality gates for optional improvements. Root remains free to reason, work alone,

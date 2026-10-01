@@ -6,7 +6,7 @@ cannot guarantee that the host will always obey policy or load all instructions.
 
 Project `astraeus.toml` is optional. Read only the file at the working project root.
 Validate via `python3 <plugin>/scripts/astraeus.py doctor --config astraeus.toml`.
-Defaults: four documented model candidates; review_limit=2; no additional mandatory
+Defaults: five documented model candidates (including preferred GPT-6.1 Sol root); review_limit=2; no additional mandatory
 paths; assurance=reported. review_limit can only be lowered to 1, never raised above 2.
 Allowed model IDs are restrictions, not proof of availability.
 `require_review_globs` matches project-relative changed paths with Python fnmatchcase

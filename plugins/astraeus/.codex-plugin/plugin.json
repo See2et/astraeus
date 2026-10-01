@@ -1,7 +1,7 @@
 {
   "name": "astraeus",
-  "version": "0.1.0+codex.20261001030019",
-  "description": "Adaptive native Codex delegation and independent review, led by Astra.",
+  "version": "0.1.0+codex.20261001031316",
+  "description": "Adaptive native Codex delegation and independent review, with GPT-6.1 Sol root and GPT-6 Astra design judgment.",
   "author": {
     "name": "See2et"
   },

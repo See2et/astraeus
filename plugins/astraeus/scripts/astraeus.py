@@ -24,7 +24,7 @@ import tomllib
 PLUGIN = Path(__file__).resolve().parents[1]
 DEFAULTS = {
     "schema_version": 1,
-    "allowed_models": ["gpt-6-astra", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"],
+    "allowed_models": ["gpt-6.1-sol", "gpt-6-astra", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"],
     "review_limit": 2,
     "require_review_globs": [],
     "assurance": "reported",

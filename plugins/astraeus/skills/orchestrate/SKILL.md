@@ -5,10 +5,13 @@ description: Apply Astraeus orchestration policy autonomously to project work wh
 
 # Astraeus
 
-The user owns product intent and scope; root Astra interprets the authorized requirements
+The user owns product intent and scope; root interprets the authorized requirements
 and owns architecture, routing, integration, and final acceptance within that scope.
-Keep the user's root model/effort. If host metadata shows a non-Astra root, disclose
-the mismatch; do not claim Astra judgment or silently switch models. Unknown is unknown.
+Prefer GPT-6.1 Sol (`gpt-6.1-sol`) for root; preserve explicit user model/effort pins.
+This is a selection preference, not a runtime switch. If host metadata shows a different
+root from the requested one, disclose it; never claim a switch or Astra judgment without
+host evidence. Unknown is unknown. Continue useful authorized work on the existing root
+when switching is unavailable; report the requested root as not yet applied.
 Use native Codex agents only, with the actual exposed tool names and schema. No nested
 inference CLI, API-key fallback, invented controls, or model/session/authentication engine.
 
@@ -46,25 +49,32 @@ not measured quota savings or guarantees about model quality:
 
 | Candidate | Prefer when |
 | --- | --- |
-| Luna | Narrow, explicit, local, easily checked work; targeted discovery, mechanical edits. |
-| Terra | Bounded work requiring moderate judgment or several related files; ordinary implementation/investigation/review. |
-| Sol | Ambiguous or complex dependencies, costly errors, difficult bugs, concurrency/compatibility/security review. |
-| Fresh Astra | Deep independent reasoning, architectural scrutiny, or design/visual quality judgment. |
-| Root Astra | Handoff costs dominate, scope is still unclear, work is tightly coupled, or final integration/acceptance is needed. |
+| GPT-5.6 Luna | Narrow, explicit, local, easily checked work; targeted discovery, mechanical edits. |
+| GPT-5.6 Terra | Bounded work requiring moderate judgment or several related files; ordinary implementation/investigation/review. |
+| GPT-5.6 Sol | Ambiguous or complex dependencies, costly errors, difficult bugs, concurrency/compatibility/security review. |
+| Fresh GPT-6 Astra | Deep independent reasoning, architectural scrutiny, or design/visual quality judgment. |
+| Root GPT-6.1 Sol | Handoff costs dominate, scope is still unclear, work is tightly coupled, or final integration/acceptance is needed. |
 
 Prioritize Astra for design direction, composition, typography, color, polish, and
 visual acceptance of screens, documents, slides, or other visual artifacts. Other
 models can implement a settled design or perform objective extraction/dimension checks.
-Root Astra must inspect rendered artifacts when appearance matters; a worker's report
-is not visual acceptance. Use fresh Astra for an independent visual review when needed,
-not an extra agent merely to repeat the root's inspection. If visual access or Astra
-is unavailable, report the missing check rather than substituting silently.
+When appearance matters, GPT-6 Astra must inspect rendered artifacts; an implementation
+report is not visual acceptance. With a Sol root, delegate this judgment to a fresh Astra
+agent and use that evidence in root's final acceptance. Combine this with the required
+independent review when its scope fits; do not add another agent just to repeat it.
+If root is explicitly pinned to Astra, it may inspect directly, with fresh independent
+review when required. If visual access or Astra is unavailable, report the missing check
+rather than substituting silently.
 
 Do not try the cheapest model first by ritual, or assume maximum effort on a smaller
 model replaces a stronger model. Consider uncertainty, context, risk, and checkability.
 Use live capabilities, not this table, to resolve exact model IDs and effort support.
-Allowed defaults: `gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`.
-Respect project restrictions and user pins. Explain material routing changes briefly.
+Allowed defaults: `gpt-6.1-sol`, `gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`.
+GPT-6 Luna (`gpt-6-luna`) is not a default candidate; do not route to it unless the user
+explicitly requests it. GPT-5.6 Luna remains a distinct candidate for narrow work.
+Availability in documentation or an allowlist does not prove live host support. Do not
+substitute GPT-5.6 Sol for a GPT-6.1 Sol pin. Respect project restrictions and user pins.
+Explain material routing changes briefly.
 
 ## Handoff and acceptance
 
