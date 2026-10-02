@@ -62,6 +62,7 @@ class ContractTests(unittest.TestCase):
         data = review()
         data["suggestions"] = ["Optional: shorten the helper name."]
         self.assertFalse(self.check_review(data)["acceptance_checks_passed"])
+        self.assertTrue(self.check_review(data, accept=True)["acceptance_checks_passed"])
 
     def test_review_inconclusive_is_valid_input(self):
         data = review()
@@ -75,7 +76,7 @@ class ContractTests(unittest.TestCase):
                          dict(bugs=[dict(location="p:1", claim="crashes", evidence="repro")])]
         for change in modifications:
             with self.subTest(change=change), self.assertRaises(ValueError):
-                self.check_review(review() | change)
+                self.check_review(review() | change, accept=True)
 
     def test_duplicate_json_keys_rejected(self):
         self.path.write_text('{"verdict":"pass","verdict":"inconclusive"}')
@@ -199,9 +200,25 @@ class ContractTests(unittest.TestCase):
                                             review_receipt=review_receipt)
                 path.write_text(json.dumps(receipt_data))
 
-    def test_legacy_review_accept_and_adjudication_only_arguments_are_rejected(self):
-        with self.assertRaisesRegex(ValueError, "only for adjudication"):
-            self.check_review(review(), accept=True)
+    def test_review_acceptance_requires_pass(self):
+        finding = dict(location="p:1", claim="crashes", evidence="repro")
+        for change in (dict(verdict="changes_required", bugs=[finding]),
+                       dict(verdict="inconclusive", unresolved=["Missing evidence"])):
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, "does not pass"):
+                self.check_review(review() | change, accept=True)
+
+    def test_strict_review_acceptance_requires_reviewer_receipt(self):
+        with self.assertRaisesRegex(ValueError, "requires --receipt"):
+            self.check_review(review(), accept=True, assurance="strict")
+        receipt = Path(self.tmp.name) / "reviewer-host.json"
+        receipt.write_text(json.dumps(dict(
+            requested=dict(model="gpt-6-astra", effort="high"),
+            observed=dict(model="gpt-6-astra", effort="high", sandbox="read-only"),
+            source="host response thread 123")))
+        self.assertTrue(self.check_review(review(), accept=True, assurance="strict",
+                                         receipt=receipt)["acceptance_checks_passed"])
+
+    def test_adjudication_only_arguments_are_rejected_for_review(self):
         with self.assertRaisesRegex(ValueError, "only for adjudication"):
             self.check_review(review(), review_result=self.review_path)
         self.path.write_text(json.dumps(review()))

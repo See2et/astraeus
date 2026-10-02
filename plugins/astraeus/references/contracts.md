@@ -44,7 +44,7 @@ the prompt, state that enforcement is unavailable when it is, and validate the r
 
 ```sh
 uv run <plugin>/scripts/astraeus.py validate-result .astraeus/result.json \
-  --kind review --task-id task-1 --target-id <current-target>
+  --kind review --task-id task-1 --target-id <current-target> --accept
 
 uv run <plugin>/scripts/astraeus.py validate-result .astraeus/adjudication.json \
   --kind adjudication --task-id task-1 --target-id <current-target> \
@@ -54,8 +54,13 @@ uv run <plugin>/scripts/astraeus.py validate-result .astraeus/adjudication.json 
 `uv run` installs only the declared JSON Schema validator dependency, not any model
 runtime. Alternatively install jsonschema in your Python environment and use python3.
 `--review-result` is required for adjudication, even without `--accept`.
-`--accept` is now only for adjudication; legacy review-only acceptance commands fail
-explicitly. Review v1 files remain valid inputs. For other roles omit `--accept`;
+`--accept` supports review and adjudication. A review must be a complete `pass` with
+scope/evidence and no blocking or unresolved items; optional suggestions are allowed.
+Root may accept that target without adjudication after checking the evidence and current
+target. A complete `changes_required` review needs adjudication; an incomplete or
+`inconclusive` review needs evidence or the next review round. Strict review acceptance
+requires the reviewer host receipt via `--receipt`. Review v1 files remain valid inputs.
+For other roles omit `--accept`;
 inspect status and evidence before integration. No `--accept` means format/semantic
 validation only (exit 0 does NOT mean acceptance).
 

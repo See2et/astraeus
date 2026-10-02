@@ -1,11 +1,23 @@
 # Verification record
 
+## 2026-10-02 update
+
+Only complete `changes_required` reviews trigger adjudication. A complete `pass`
+can be validated with `--kind review --accept` before root acceptance, including
+optional suggestions. Incomplete or `inconclusive` reviews remain incomplete.
+Strict review acceptance requires the reviewer host receipt; rejected-review
+adjudication still requires both receipts. Target/task identity checks remain intact.
+
+The 25-test unit suite passed, covering direct pass acceptance, rejection of non-pass,
+false-pass and stale review inputs, strict receipt requirements, and the existing
+adjudication guarantees. `git diff --check` passed. This checks the validator and
+policy consistency, not automatic compliance by future model sessions.
+
 ## 2026-10-01 update
 
 The workflow now separates review findings from adoption decisions and checks the
-requirement basis of affected behavior/tests. Current acceptance uses adjudication
-plus its original review; the review-only `--accept` commands in the historical record
-below describe the earlier interface, not the current one.
+requirement basis of affected behavior/tests. That update required adjudication
+plus its original review for acceptance; the 2026-10-02 update below supersedes that rule.
 
 A fresh-context native agent requested as Astra/high applied the new guidance to four
 bounded fixtures. It rejected speculative simultaneous coin input and restoration of

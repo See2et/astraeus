@@ -3,7 +3,8 @@
 Lightweight Codex CLI orchestration: GPT-6.1 Sol root owns routing and final acceptance; native
 subagents take bounded work and independently review consequential changes.
 
-Review findings go to a separate fresh adjudicator before fixes or acceptance. It checks
+Rejected reviews (`changes_required`) go to a separate fresh adjudicator before fixes
+or acceptance. Passing reviews go directly to root acceptance after validation. It checks
 requirement authority, concrete impact, and proportionality; root owns final acceptance.
 Existing code and tests describe behavior, but do not by themselves make it a requirement.
 
@@ -81,8 +82,9 @@ GPT-6 Luna is excluded from default routing; GPT-5.6 Luna remains available. The
 Consequential behavior, compatibility, data, permissions, installation, and substantial
 cross-component changes require a fresh independent reviewer. Reviewers do not fix their
 findings. Optional improvements do not block acceptance. Maximum: **two total reviewer
-dispatches**, including failures (initial + one re-review). Each complete review has one
+dispatches**, including failures (initial + one re-review). Only complete `changes_required` reviews have one
 separate adjudicator dispatch, capped at the same total limit including failures.
+Passing reviews need no adjudicator; incomplete reviews need evidence or the next round.
 Unresolved or inconclusive results remain incomplete. Pinned models are never changed automatically.
 
 ## Optional project policy
@@ -115,14 +117,16 @@ and capture a target ID:
 python3 /path/to/plugin/scripts/astraeus.py target --repo /path/to/project
 ```
 
-Pass that ID and a task ID to the reviewer, then the adjudicator along with the original
-review. Recompute the target before acceptance; validate against that current value,
+Pass that ID and a task ID to the reviewer. For a complete `changes_required` review,
+pass them to the adjudicator along with the original review. Recompute the target before acceptance; validate against that current value,
 not merely the ID the agents echoed:
 
 ```sh
 uv run /path/to/plugin/scripts/astraeus.py validate-result .astraeus/review.json \
-  --kind review --task-id task-1 --target-id sha256:CURRENT_HASH
+  --kind review --task-id task-1 --target-id sha256:CURRENT_HASH --accept
 
+# For a complete changes_required review, validate input without --accept,
+# dispatch adjudication, then validate its acceptance:
 uv run /path/to/plugin/scripts/astraeus.py validate-result .astraeus/adjudication.json \
   --kind adjudication --task-id task-1 --target-id sha256:CURRENT_HASH \
   --review-result .astraeus/review.json --accept
@@ -130,10 +134,11 @@ uv run /path/to/plugin/scripts/astraeus.py validate-result .astraeus/adjudicatio
 
 You can instead install `jsonschema` and use `python3`. Without `--accept`, exit 0 only
 means a valid result, including a valid failure/inconclusive result. `--accept` checks
-adjudication consistency, exact review identity, and disposition coverage, but cannot
+a passing review or adjudication consistency, exact review identity, and disposition
+coverage, but cannot
 prove truthful evidence, correct scope, independence, or dispatch budget adherence;
-root must check those. Review v1 files remain valid; review-only `--accept` is deliberately
-rejected. Strict adjudication requires `--receipt` for the adjudicator and
+root must check those. Review v1 files remain valid. Strict review acceptance requires
+the reviewer host `--receipt`. Strict adjudication requires `--receipt` for the adjudicator and
 `--review-receipt` for the reviewer. Example JSON is illustrative, not a
 receipt for real work. Native spawn does not promise generation-time schema enforcement.
 
@@ -144,7 +149,7 @@ and preserved contracts from the request and relevant evidence; clear requests n
 extra approval. The implementation owner inspects affected tests/behavior, implements,
 and verifies. No full-repository inventory or mandatory new spec documents are required.
 
-Use `$astraeus:adjudicate` after independent review. Its dispositions are `fix`,
+Use `$astraeus:adjudicate` only after a complete `changes_required` review. Its dispositions are `fix`,
 `investigate`, `reject`, and `human_decision`. Only adopted fixes return to the original
 implementation owner. Speculative features, severity labels, or a test's existence do
 not authorize new requirements. Real consumers, data invariants, and published contracts

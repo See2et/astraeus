@@ -88,8 +88,11 @@ supported extent. For reviews, never fork the implementation conversation. Use
 to spawn more agents; root owns delegation and the finite budget.
 
 For consequential changes, use [independent review](../review/SKILL.md) after ordinary
-verification, then a separate [adjudicator](../adjudicate/SKILL.md) before adopting any
-finding or accepting the work. This includes behavior/API/compatibility, data, permissions, installation,
+verification. Dispatch a separate [adjudicator](../adjudicate/SKILL.md) only when a
+complete review returns `changes_required`, before adopting fixes or accepting that
+rejected target. For `pass`, root validates the review and current target and owns final
+acceptance without an adjudicator. `inconclusive` or incomplete reviews need evidence
+or the next review round; do not dispatch an adjudicator to waive missing evidence. This includes behavior/API/compatibility, data, permissions, installation,
 or meaningful multi-component changes. Trivial spelling/format-only edits may finish
 solo. Apply additional mandatory paths from project policy. Root decides borderline
 cases with a short reason; optional polish never becomes a new acceptance gate.

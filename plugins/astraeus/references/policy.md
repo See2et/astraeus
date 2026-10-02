@@ -14,10 +14,13 @@ semantics (`*` can cross `/`); these add review requirements, never remove risk-
 Global activation applies everywhere unless a higher-priority or explicit instruction
 disables it. Do not make global edits or install anything while executing ordinary work.
 
-Each complete independent review is followed by one separate fresh adjudicator before
-fixes or acceptance, including a review with no findings. `review_limit` still bounds
+Only a complete `changes_required` review triggers one separate fresh adjudicator
+before fixes or acceptance of the rejected target. A complete `pass` goes directly to
+root acceptance after review validation and current-target/evidence checks; optional
+suggestions do not trigger adjudication. Incomplete or `inconclusive` reviews need
+evidence or the next review round, not adjudication. `review_limit` still bounds
 reviewer dispatches (maximum two); adjudicator dispatches are separately capped at one
-per complete review and at the same total limit. Failed/malformed/interrupted attempts
+per complete `changes_required` review and at the same total limit. Failed/malformed/interrupted attempts
 consume their role's slot; there are no hidden repair turns, reviewer/adjudicator debate
 loops, or recursive acceptance agents. Incomplete reviews first need evidence or the
 next review round. Use remaining rounds for an updated target/evidence; exhausted or

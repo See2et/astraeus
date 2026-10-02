@@ -24,7 +24,9 @@ shared project instructions, or independently verified model identity. Review re
 an evidence-based judgment rather than an automatic proof of correctness.
 
 The user owns product intent and scope. A distinct fresh adjudicator assesses reviewer
-claims before fixes or acceptance, including clean reviews. It can reject a purported
+claims before fixes or acceptance only for complete `changes_required` reviews. Passing
+reviews go directly to root acceptance after review validation and target/evidence checks.
+Optional suggestions do not trigger adjudication. It can reject a purported
 requirement using evidence; reviewer pass is no longer an unconditional veto or sole
 acceptance gate. Incomplete coverage/evidence still blocks acceptance. Root checks the
 adjudicator's reasons and owns final acceptance. Each reviewer round has at most one
@@ -40,8 +42,8 @@ not speculative compatibility layers or indiscriminate deletion.
 Adjudication references every original finding by array/index and binds to the exact
 review file hash and task/target. The validator rejects omissions, stale reports, and
 contradictory acceptance states, but cannot prove the substance of decisions. Existing
-review v1 remains readable; review-only `--accept` intentionally fails with migration
-guidance. Strict adjudication needs both roles' independent host receipts.
+review v1 remains readable; review-only `--accept` accepts only a complete pass.
+Strict review acceptance needs the reviewer host receipt. Strict adjudication needs both roles' independent host receipts.
 
 JSON Schema is used as a well-known result interface, validated by jsonschema rather
 than a home-grown schema interpreter. This adds one Python dependency only when result

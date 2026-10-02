@@ -183,8 +183,8 @@ def validate_adjudication(data, source):
 
 def validate_result(path, kind, task_id, target_id, accept=False, assurance="reported", receipt=None,
                     review_result=None, review_receipt=None):
-    if accept and kind != "adjudication":
-        raise ValueError("--accept is only for adjudication; validate review input without --accept")
+    if accept and kind not in ("review", "adjudication"):
+        raise ValueError("--accept is only for review or adjudication")
     if kind != "adjudication" and (review_result is not None or review_receipt is not None):
         raise ValueError("--review-result and --review-receipt are only for adjudication")
     if kind == "adjudication" and review_result is None:
@@ -199,8 +199,11 @@ def validate_result(path, kind, task_id, target_id, accept=False, assurance="rep
             raise ValueError("review hash mismatch: adjudication is not bound to the supplied review bytes")
         validate_adjudication(data, source)
 
-    if accept and data["verdict"] != "accept":
-        raise ValueError("adjudication does not accept; do not accept")
+    if accept:
+        if kind == "review" and data["verdict"] != "pass":
+            raise ValueError("review does not pass; changes_required needs adjudication, inconclusive needs evidence")
+        if kind == "adjudication" and data["verdict"] != "accept":
+            raise ValueError("adjudication does not accept; do not accept")
     validate_receipt(receipt, assurance)
     if kind == "adjudication":
         validate_receipt(review_receipt, assurance, "--review-receipt")

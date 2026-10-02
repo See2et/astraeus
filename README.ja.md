@@ -2,7 +2,8 @@
 
 GPT-6.1 SolのRootが設計・委譲判断・統合・最終受け入れを担う、軽量なCodex CLI Pluginです。
 必要な仕事だけをネイティブSubAgentへ委譲し、重要な変更を別コンテキストでレビューします。
-レビュー後は別の採否Agentが要件の根拠・具体的な影響・修正の妥当性を判断します。
+レビューでReject相当の`changes_required`が出た場合だけ、別の採否Agentが要件の根拠・具体的な影響・修正の妥当性を判断します。
+PassはRootが結果と現在の対象を確認して受け入れます。
 採用した指摘だけを実装担当へ戻し、Rootが最終受け入れを行います。
 
 小さな仕事はRootだけで完了します。実装担当が通常の検証も担当し、親は必要な統合確認を行います。
@@ -69,8 +70,8 @@ effortは別に判断し、実行環境が対応する値だけを指定しま�
 重要な動作変更、互換性、データ、権限、インストール、複数部分にまたがる変更は独立レビューが必要です。
 任意改善は完了を妨げません。レビュアーは編集しません。上限は**初回＋再レビュー1回の計2回**で、
 失敗・不正な返信・中断も回数に含めます。未解決・証拠不足は未完了です。
-各完了レビューには採否Agentを1回呼び出します。採否Agentも同じ上限で、失敗を回数に含めます。
-指摘のないレビューも採否判断を経ます。再帰的なレビュー・採否の議論は行いません。
+`changes_required`の完了レビューにだけ採否Agentを1回呼び出します。採否Agentも同じ上限で、失敗を回数に含めます。
+Passでは採否Agentを呼び出しません。任意の改善提案も採否判断の理由にはしません。証拠不足や`inconclusive`は未完了として扱います。再帰的なレビュー・採否の議論は行いません。
 モデルをユーザーが固定していなければ、Rootは理由を示して選び直せます。
 
 ## 設定と返信形式
@@ -91,7 +92,8 @@ python3 plugins/astraeus/scripts/astraeus.py doctor --config astraeus.example.to
 具体的な検証コマンドは[Contract仕様](plugins/astraeus/references/contracts.md)と[英語README](README.md#result-contracts)にあります。
 
 採否結果の検証は `--kind adjudication --review-result <元レビューJSON> --accept` で受け入れ条件まで確認できます。
-レビューv1は引き続き読めますが、レビュー単独の `--accept` はエラーになります。指定しない場合、終了コード0は
+Passは `--kind review --accept` で直接検証できます。`strict`ではレビューAgentのホスト証拠を`--receipt`で渡します。
+レビューv1は引き続き読めます。`changes_required`と`inconclusive`をレビュー単独で受け入れることはできません。指定しない場合、終了コード0は
 「形式が正しい」という意味だけです。根拠の真偽・確認範囲・独立性・回数遵守はRootが確認します。
 採否結果は元レビューの内容ハッシュと対象コードに紐づけ、指摘の漏れ・重複・古い結果を拒否します。
 `strict`の採否検証では、採否Agentの`--receipt`とレビューAgentの`--review-receipt`が必要です。
@@ -107,7 +109,7 @@ python3 plugins/astraeus/scripts/astraeus.py doctor --config astraeus.example.to
 テスト件数を目標にせず、通すためだけのassertion緩和も行いません。未文書化でも実利用者や公開契約、
 保存データへの影響は確認し、理由が不明というだけで削除しません。毎回の全体棚卸しは不要です。
 
-`$astraeus:adjudicate`は各指摘を「修正／調査／不採用／人間による仕様判断」に分けます。
+`$astraeus:adjudicate`は`changes_required`の場合にだけ呼び出し、各指摘を「修正／調査／不採用／人間による仕様判断」に分けます。
 レビューの重大度やテストの存在だけで採用せず、既存の範囲内の修正は自律的に進めます。
 未承認の製品仕様変更だけを、影響と選択肢をまとめてユーザーへ戻します。証拠不足は採否Agentでも免除できません。
 詳しくは[要件とテストの方針](plugins/astraeus/references/requirements-and-tests.md)を参照してください。

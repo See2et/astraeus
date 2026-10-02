@@ -42,13 +42,19 @@ from optional improvements. Every blocking finding needs a location, concrete cl
 and evidence/reproduction. Do not turn preferences into bugs. Use `inconclusive` for
 missing evidence or incomplete coverage, never a speculative pass.
 
-Root validates the reply and checks evidence against the target, then dispatches
-[adjudication](../adjudicate/SKILL.md) for every complete review, including `pass`.
-Do not automatically send findings to the implementer. Reviewer `pass` is neither
-final acceptance nor required when complete findings are rejected on evidence by the
-adjudicator. Incomplete coverage/evidence cannot be waived. A process exit code or a
+Root validates the reply and checks evidence against the current target. For a complete
+`pass`, validate with `--kind review --accept` and proceed to root acceptance without
+an adjudicator; optional suggestions do not trigger adjudication or block acceptance.
+Dispatch [adjudication](../adjudicate/SKILL.md) only for a complete `changes_required`
+review, before adopting fixes or accepting the rejected target. Do not automatically
+send findings to the implementer. Reviewer `pass` is not final acceptance; root still
+checks scope, evidence, assurance, and target identity. Pass is not required when
+complete findings are rejected on evidence by the adjudicator. Incomplete coverage/evidence cannot be waived. A process exit code or a
 well-formed reply alone is not acceptance. Review existing user changes only to the
 extent required to assess the authorized change, and never claim credit for them.
+
+An incomplete or `inconclusive` review needs evidence or the next review round,
+not adjudication.
 
 Hard limit: two total reviewer dispatches (initial + one re-review); project policy
 may lower it to one. Failed,

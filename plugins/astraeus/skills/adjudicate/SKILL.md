@@ -6,7 +6,9 @@ description: Decide which independent review findings warrant action before fixe
 # Review adjudication
 
 Root dispatches a fresh native agent distinct from the implementer and reviewer after
-each completed independent review, including a pass. Read [policy](../../references/policy.md),
+a complete independent review returns `changes_required`. A `pass` goes directly to
+root acceptance after validation; incomplete or `inconclusive` reviews need evidence
+or the next review round, not adjudication. Read [policy](../../references/policy.md),
 [contracts](../../references/contracts.md), and [requirements and tests](../../references/requirements-and-tests.md).
 Use the orchestrate routing guidance; consequential product/design judgment favors
 Astra. No implementation conversation or proposed adoption verdict is inherited.
@@ -54,7 +56,7 @@ owner for implementation and ordinary verification. Resolve investigations in th
 ownership; escalate only unauthorized product decisions, grouped for the user. Neither
 adjudicator nor root may silently change the agreed requirements to obtain acceptance.
 
-Follow the review budget in policy: one adjudicator dispatch per completed review,
+Follow the review budget in policy: one adjudicator dispatch per complete `changes_required` review,
 at most two total, no hidden repair turns or adjudication of adjudication. Failures and
 inconclusive results consume the allocated attempt. A corrected target or new evidence
 needs the next review/adjudication round within the remaining budget. A material new
