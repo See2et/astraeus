@@ -9,6 +9,13 @@ request in task context and attests to it with `--user-requested`; the flag cann
 authenticate user consent. Keep that authorization for follow-up fixes within the same
 task, not new work. Explicit project prohibitions and model pins still apply.
 
+Use **Claude Opus 5.5 or a higher version** for this path. Select an explicit model
+ID supported by the local Claude Code CLI and available to the account. Use the
+`opus` alias only when it is verified to resolve to Opus 5.5 or higher; do not
+silently fall back to an older Opus version or another model family. If this
+requirement conflicts with an explicit model pin or no qualifying model is
+available, report the conflict or unavailability before dispatch.
+
 GPT/native Codex remains the default for all other work, including business logic,
 APIs, data, architecture, integration, independent review, adjudication, and final
 acceptance. Claude's implementation owner also performs its ordinary verification
@@ -31,13 +38,14 @@ reset, stash, or commit it merely to prepare delegation. A linked worktree alone
 not a security sandbox. Put request/state/report in a dedicated control directory
 outside that worktree; never expose an unrelated personal directory to the agent.
 
-Example request (replace paths and verification commands with the actual task):
+Example request (replace the model placeholder with a supported Opus 5.5-or-higher
+model ID, and paths and verification commands with the actual task):
 
 ```json
 {
   "task_id": "design-001",
   "scope": "ui-implementation",
-  "model": "opus",
+  "model": "YOUR_OPUS_5_5_OR_HIGHER_MODEL_ID",
   "effort": "high",
   "owned_paths": ["src/components/ProductCard.tsx", "src/styles/product-card.css"],
   "goal": "Implement the requested product card layout using the supplied design brief.",
