@@ -1,7 +1,10 @@
 # Policy and host boundaries
 
 Astraeus is an instruction layer, not a scheduler or security boundary. Codex owns
-execution, authentication, threads, permissions, and model capabilities. Skill use
+execution, authentication, threads, permissions, and model capabilities for native
+agents. An explicitly requested Claude design task uses Claude Code's own lifecycle
+and credentials through the optional bridge; Codex permissions do not establish the
+permissions of a detached Claude process. Skill use
 cannot guarantee that the host will always obey policy or load all instructions.
 
 Project `astraeus.toml` is optional. Read only the file at the working project root.
@@ -46,8 +49,12 @@ is absent, use unknown, with a short source explanation. Do not inspect auth fil
 private session history, unrelated personal skills, or billing to fill missing values.
 Under reported assurance, unobservable realized settings can proceed with disclosure;
 known mismatch cannot be called a successful pinned dispatch. Under strict assurance,
-missing evidence is blocking. No silent model substitution, external inference, or
-API charging fallback. User pins remain authoritative.
+missing evidence is blocking. No silent model substitution or API charging fallback.
+The sole external-inference exception is user-requested Claude design direction and
+directly related UI implementation using `--bg`; see [Claude design delegation](claude-design.md).
+`allowed_models` restricts native GPT routing, not proof of Claude availability or
+permission to dispatch it. Project prohibitions and user pins remain authoritative.
+Claude never replaces the native independent reviewer or adjudicator.
 
 Review target IDs can be supplied by a caller's immutable snapshot or by the bundled
 `target` command. The command hashes HEAD, tracked staged/unstaged changes, and

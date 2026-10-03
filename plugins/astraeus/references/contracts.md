@@ -3,6 +3,11 @@
 Contracts describe results, never the agent's private reasoning or search sequence.
 Read only the relevant schema under `../schemas/`. Review and adjudication require JSON; exploration,
 research, and implementation may use concise prose when parsing offers little value.
+The optional Claude background bridge requires an implementation JSON file for
+machine collection, even when the task is design direction without code changes.
+Normal conversation and design explanations may remain prose. Its dispatch target
+identifies the initial source; the bridge reports the final source target separately
+for subsequent native review. See [Claude design delegation](claude-design.md).
 Empty lists are valid where there is nothing to report. Do not manufacture findings.
 
 Common fields: `schema_version: 1`, `kind`, `task_id`, `target_id`, `status`

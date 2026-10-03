@@ -1,5 +1,29 @@
 # Verification record
 
+## 2026-10-03 Claude design bridge
+
+The optional bridge delegates only explicitly requested design work to `claude --bg`.
+Ordinary GPT routing and native review/adjudication remain unchanged. Final reports
+are JSON files validated after generation, not structured-output guarantees from
+background Claude. Initial dispatch and final review source identities are separate.
+
+Local Claude Code 2.1.223 help confirms background launch, full session identifiers,
+permission/configuration controls, session JSON listing, and exact-session stop.
+These capability checks perform no inference. Source isolation/scope and lifecycle
+handling are verified with real temporary Git worktrees and a mocked Claude CLI.
+The combined suite and the bridge's final 10-test suite pass, including authorization, preview-only dispatch,
+session/worktree binding, report validation, committed/staged/reverted/untracked/ignored scope checks,
+symlink escapes, and exact-session cancellation.
+This does not prove live authentication, runtime permissions, background supervisor
+behavior, rendered-artifact quality, or subscription usage savings. No Claude inference
+or `-p` call is made during verification.
+
+The real Codex 0.159.3 isolated plugin lifecycle smoke check verifies that the installed
+package includes the Claude bridge and its reference, and that the installed bridge's
+CLI entrypoint executes. Installation, refresh, reset, activation/removal, and unrelated
+plugin/auth/history/config preservation pass in a temporary `CODEX_HOME`. The changed
+orchestrate skill passes its structural validator. Existing schemas remain compatible.
+
 ## 2026-10-02 update
 
 Only complete `changes_required` reviews trigger adjudication. A complete `pass`
@@ -17,7 +41,7 @@ policy consistency, not automatic compliance by future model sessions.
 
 The workflow now separates review findings from adoption decisions and checks the
 requirement basis of affected behavior/tests. That update required adjudication
-plus its original review for acceptance; the 2026-10-02 update below supersedes that rule.
+plus its original review for acceptance; the 2026-10-02 update above supersedes that rule.
 
 A fresh-context native agent requested as Astra/high applied the new guidance to four
 bounded fixtures. It rejected speculative simultaneous coin input and restoration of

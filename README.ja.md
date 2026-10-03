@@ -9,6 +9,10 @@ PassはRootが結果と現在の対象を確認して受け入れます。
 小さな仕事はRootだけで完了します。実装担当が通常の検証も担当し、親は必要な統合確認を行います。
 デザインセンス・視覚的な完成度の判断はAstraを優先します。実装を委譲しても、見た目が重要なら
 Astraが実際の画面・画像を確認します。モデル・人数・検索回数を機械的に固定しません。
+通常の作業はGPTを優先します。ユーザーが明示的に希望した場合だけ、デザイン設計と直接関連する
+UI実装をClaude Codeの`--bg`へ委譲できます。その他の実装、独立レビュー、採否判断、統合はGPTに
+残します。「見た目を改善して」という依頼だけではClaudeを起動しません。
+連携方法は[Claude委譲仕様](plugins/astraeus/references/claude-design.md)にあります。
 
 重複作業を減らすため、目的・範囲・制約・完了条件が委譲できる程度に明確になったら、Rootの
 調査を止めます。範囲が明確な仕事の調査・実装・通常の検証・修正は同じ担当者が継続します。
@@ -89,6 +93,8 @@ python3 plugins/astraeus/scripts/astraeus.py doctor --config astraeus.example.to
 
 探索・外部調査・実装・レビュー・採否にJSON Schemaを用意しています。レビューと採否以外は、利益が小さければ
 短い通常返信で構いません。Schemaが指定するのは成果物であり、内部の思考手順ではありません。
+Claudeのバックグラウンド連携では、回収用の最終成果だけimplementation JSONを必須にします。
+会話全体のJSON化や生成時のSchema強制は求めず、`-p`への自動切替もしません。
 具体的な検証コマンドは[Contract仕様](plugins/astraeus/references/contracts.md)と[英語README](README.md#result-contracts)にあります。
 
 採否結果の検証は `--kind adjudication --review-result <元レビューJSON> --accept` で受け入れ条件まで確認できます。

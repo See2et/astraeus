@@ -58,6 +58,10 @@ def main():
         assert (installed_path / "skills/orchestrate/SKILL.md").is_file()
         assert (installed_path / "skills/adjudicate/SKILL.md").is_file()
         assert (installed_path / "schemas/adjudication.json").is_file()
+        assert (installed_path / "scripts/claude_bridge.py").is_file()
+        assert (installed_path / "references/claude-design.md").is_file()
+        bridge_help = run(sys.executable, str(installed_path / "scripts/claude_bridge.py"), "--help")
+        assert all(command in bridge_help for command in ("start", "status", "result", "cancel"))
         skill = source / "plugins/astraeus/skills/orchestrate/SKILL.md"
         skill.write_text(skill.read_text() + "\nSmoke refresh marker.\n")
         refreshed = manage("refresh")
@@ -89,7 +93,7 @@ def main():
         assert config["plugins"]["sentinel@sentinel-market"]["enabled"] is True
         run("codex", "plugin", "marketplace", "remove", "astraeus")
         print(json.dumps(dict(status="passed", cli=run("codex", "--version").strip(),
-                              checks=["install", "refresh contents", "reset", "source mismatch refusal",
+                              checks=["install", "Claude bridge packaged and executable", "refresh contents", "reset", "source mismatch refusal",
                                       "activation enable/disable", "remove", "other plugin unchanged",
                                       "auth/history unchanged", "unrelated config preserved"]), indent=2))
 

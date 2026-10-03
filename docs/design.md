@@ -3,7 +3,8 @@
 Approved direction: global autonomous activation, native agents with prompt-level
 no-edit/schema instructions plus post-validation, finite recovery, and Astra priority
 for design and visual acceptance. The initial explicit-only activation proposal was
-replaced before implementation. No exec-based inference fallback is in this MVP.
+replaced before implementation. Native GPT agents remain the default. The explicitly
+authorized Claude design bridge is an optional extension, not an inference fallback.
 
 The preferred root is GPT-6.1 Sol, with GPT-6 Astra for deep/design/visual judgment
 and GPT-5.6 Sol/Terra/Luna for bounded delegated work. GPT-6 Luna is not a default
@@ -67,7 +68,22 @@ or edited markers and symlinks. Its operations are preview-first. Local refresh 
 marketplace identity and relies on official Codex commands. A process racing to modify
 the source/config after preflight is outside its guarantee; use serial maintenance.
 
-MVP excludes: inference subprocesses, custom auth, agent session stores, recursive agent
+The Claude exception is opt-in per task: design direction and directly related UI
+implementation only, with ordinary verification and fixes kept with the implementation
+owner. A request to improve appearance alone does not authorize it. Root continues to
+own scope, architecture, integration, and final acceptance; independent review and
+adjudication remain native GPT work, including Astra rendered-artifact judgment.
+
+The bridge delegates execution and lifecycle to `claude --bg` and supported Claude CLI
+commands. It neither implements authentication nor maintains its own session database.
+A small file-backed handoff binds the user request, dedicated linked worktree, baseline,
+and selected session. Scope checks detect worktree changes at collection; they are not
+a security sandbox for the background process. The final implementation report is a
+JSON file checked after generation. `--json-schema` is print-only; JSON does not require
+`-p`, and no automatic print/API fallback is allowed. Session completion, contract
+validity, source-scope checks, and GPT final acceptance are separate decisions.
+
+MVP excludes: other inference subprocesses, custom auth, agent session stores, recursive agent
 trees, dashboards, price snapshots, automatic quota calculations, Cloud compatibility,
 and a universal plugin-directory publication workflow. API-equivalent prices do not
 measure Pro allowance savings; usage is collected only if already exposed.

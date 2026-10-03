@@ -14,6 +14,9 @@ No model runtime, API authentication, daemon, fixed agent organization, or manda
 cost receipt. Simple work stays with the root. Implementers own ordinary tests.
 Design judgment and visual acceptance favor Astra, including inspection of rendered
 artifacts when another model implements the design.
+GPT handles ordinary work. Claude Code is optional only when the user explicitly
+requests design direction or directly related UI implementation, using `--bg` and a
+validated final JSON file. See [Claude design delegation](plugins/astraeus/references/claude-design.md).
 
 To avoid duplicate work, root stops discovery once the goal, scope, constraints, and
 acceptance check are clear enough to delegate. One owner keeps bounded discovery,
@@ -109,6 +112,8 @@ read-only; reviewers are instructed not to mutate through any tool.
 Five JSON Schemas cover exploration, research, implementation, review, and adjudication.
 Review and adjudication always require structure. Small other tasks may return concise prose. Fields describe
 outputs and evidence, never a prescribed thought process. See [contracts](plugins/astraeus/references/contracts.md).
+The optional Claude bridge requires implementation JSON for collection, without
+requiring JSON for every conversational response or claiming generation-time enforcement.
 
 In a Git project, freeze writers, put results in an ignored `.astraeus/` directory,
 and capture a target ID:

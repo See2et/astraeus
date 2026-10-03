@@ -12,8 +12,14 @@ This is a selection preference, not a runtime switch. If host metadata shows a d
 root from the requested one, disclose it; never claim a switch or Astra judgment without
 host evidence. Unknown is unknown. Continue useful authorized work on the existing root
 when switching is unavailable; report the requested root as not yet applied.
-Use native Codex agents only, with the actual exposed tool names and schema. No nested
-inference CLI, API-key fallback, invented controls, or model/session/authentication engine.
+Default to GPT and native Codex agents, with the actual exposed tool names and schema.
+Only an explicit user request permits Claude Code for design direction and directly
+related UI implementation; read [Claude design delegation](../../references/claude-design.md)
+before that dispatch. Preserve this request through the same task's follow-up fixes,
+not unrelated tasks. A generic request to improve appearance is not Claude authorization.
+Keep other implementation, integration, independent review, adjudication, and final
+acceptance on GPT where available. No other inference CLI, API-key/print fallback,
+invented controls, or custom model/session/authentication engine.
 
 For trivial work, finish directly. Do not generate a plan, receipt, contract, or agent
 just to follow this skill. For consequential work, read [policy](../../references/policy.md)
