@@ -176,6 +176,16 @@ state alone cannot resolve such a mismatch; do not claim verified session identi
 from that state. A bridge compatibility fix requires captured launch output and a
 supported, unambiguous identity binding, rather than relaxing the exact-session check.
 
+In that run, Claude completed the design proposal but the required atomic report
+rename (`mv -- <control>/result.json.tmp <control>/result.json`) was denied by Bash
+permissions in `dontAsk` mode, despite the bridge declaring that exact command allowed.
+Claude left `result.json.tmp` with status `blocked`; the reason for the permission
+mismatch remains unknown. An allow declaration does not prove live permission success,
+and a temporary report is not a complete handoff. Root may inspect the proposal directly
+as a draft, while distinguishing that assessment from verified session binding or
+successful bridge collection. Preserve the blocked evidence and diagnose the handoff
+failure without relaxing permissions or presenting the draft as a collected result.
+
 Primary references: [agent view and background lifecycle](https://code.claude.com/docs/en/agent-view),
 [CLI output and permission options](https://code.claude.com/docs/en/cli-reference), and
 [subscription/Agent SDK update](https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan).
