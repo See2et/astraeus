@@ -242,12 +242,17 @@ class PolicyTests(unittest.TestCase):
     def test_example_matches_defaults(self):
         self.assertEqual(a.policy(ROOT / "astraeus.example.toml"), a.DEFAULTS)
 
+    def test_retired_review_limit_has_migration_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "config.toml"
+            p.write_text("review_limit = 2\n")
+            with self.assertRaisesRegex(ValueError, "review_limit has been retired; remove it"):
+                a.policy(p)
+
     def test_invalid_settings(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "config.toml"
-            for text in ('review_limit = 0', 'review_limit = true', 'review_limit = 11',
-                         'review_limit = 3', 'review_limit = 10',
-                         'allowed_models = []', 'unknown = 1', 'assurance = "magic"',
+            for text in ('allowed_models = []', 'unknown = 1', 'assurance = "magic"',
                          'allowed_models = ["x", "x"]', 'schema_version = true'):
                 p.write_text(text)
                 with self.subTest(text=text), self.assertRaises(ValueError):

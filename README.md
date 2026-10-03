@@ -84,9 +84,9 @@ GPT-6 Luna is excluded from default routing; GPT-5.6 Luna remains available. The
 
 Consequential behavior, compatibility, data, permissions, installation, and substantial
 cross-component changes require a fresh independent reviewer. Reviewers do not fix their
-findings. Optional improvements do not block acceptance. Maximum: **two total reviewer
-dispatches**, including failures (initial + one re-review). Only complete `changes_required` reviews have one
-separate adjudicator dispatch, capped at the same total limit including failures.
+findings. Optional improvements do not block acceptance. Reviews and adjudications have
+**no fixed total dispatch limit**. Only complete `changes_required` reviews have one
+separate adjudicator; failed or malformed attempts may be retried as needed.
 Passing reviews need no adjudicator; incomplete reviews need evidence or the next round.
 Unresolved or inconclusive results remain incomplete. Pinned models are never changed automatically.
 
@@ -94,7 +94,8 @@ Unresolved or inconclusive results remain incomplete. Pinned models are never ch
 
 Copy `astraeus.example.toml` to the working project's `astraeus.toml` when needed.
 Defaults work without configuration. It restricts models, adds mandatory review paths,
-can lower the review limit to one, and selects reported/strict assurance. No global config
+and selects reported/strict assurance. The former `review_limit` setting is retired;
+remove it from existing configs. No global config
 rewrites and no workflow DSL. Unknown settings fail validation.
 
 ```sh
@@ -141,7 +142,7 @@ You can instead install `jsonschema` and use `python3`. Without `--accept`, exit
 means a valid result, including a valid failure/inconclusive result. `--accept` checks
 a passing review or adjudication consistency, exact review identity, and disposition
 coverage, but cannot
-prove truthful evidence, correct scope, independence, or dispatch budget adherence;
+prove truthful evidence, correct scope, or independence;
 root must check those. Review v1 files remain valid. Strict review acceptance requires
 the reviewer host `--receipt`. Strict adjudication requires `--receipt` for the adjudicator and
 `--review-receipt` for the reviewer. Example JSON is illustrative, not a

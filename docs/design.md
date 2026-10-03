@@ -1,7 +1,7 @@
 # Design decisions
 
 Approved direction: global autonomous activation, native agents with prompt-level
-no-edit/schema instructions plus post-validation, finite recovery, and Astra priority
+no-edit/schema instructions plus post-validation, evidence-based recovery, and Astra priority
 for design and visual acceptance. The initial explicit-only activation proposal was
 replaced before implementation. Native GPT agents remain the default. The explicitly
 authorized Claude design bridge is an optional extension, not an inference fallback.
@@ -31,7 +31,7 @@ Optional suggestions do not trigger adjudication. It can reject a purported
 requirement using evidence; reviewer pass is no longer an unconditional veto or sole
 acceptance gate. Incomplete coverage/evidence still blocks acceptance. Root checks the
 adjudicator's reasons and owns final acceptance. Each reviewer round has at most one
-adjudicator; both roles have finite budgets. This is not a recursive agent debate.
+adjudicator; neither role has a fixed total dispatch limit. This is not a recursive agent debate.
 
 Existing code/tests are evidence of behavior, not sufficient authority to preserve it.
 Implementation owners inspect only affected contracts and tests, explain intentionally
@@ -56,7 +56,7 @@ receipt. Strict checks validate that supplied fields agree; they cannot authenti
 the source. Reported assurance is usable on hosts without all observability controls.
 Known mismatches are errors. Missing observability is disclosed rather than invented.
 
-Consequential-change review and finite retries are root policy, not a hook or tamperproof
+Consequential-change review and evidence-based retries are root policy, not a hook or tamperproof
 state machine. A small result checker rejects malformed/stale/false passes, but cannot
 prevent a caller bypassing it. This avoids building a second orchestration/session
 engine. If enforcement outside Codex is needed, integrate the checker into an existing

@@ -153,7 +153,7 @@ external services, and writes outside the worktree are not covered by source has
 
 Successful collection is **not final acceptance**. Root checks the diff, evidence,
 and remaining risk, then integrates only the authorized changes. Consequential work
-still requires the native independent reviewer under the existing finite budget.
+still requires the native independent reviewer without a fixed total dispatch limit.
 Only a complete `changes_required` review triggers a separate GPT adjudicator; a
 validated complete `pass` goes directly to root acceptance. When appearance matters, Astra inspects rendered artifacts;
 Claude's explanation or valid JSON is not visual acceptance. If unavailable, disclose

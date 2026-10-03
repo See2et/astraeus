@@ -130,7 +130,7 @@ No source push or public visibility change was performed.
 
 The test suite checks concrete failure conditions, not whether model output repeats
 prompt wording. Native JSON contracts are post-validated, not generation-enforced.
-Review retry budgets and identifying consequential work remain root responsibilities.
+Evidence-based review retries and identifying consequential work remain root responsibilities.
 
 ## Reproduce
 

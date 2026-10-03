@@ -91,7 +91,7 @@ relevant files, decisions, and constraints rather than the full conversation. In
 conversation only when needed to preserve material context, and keep it to the minimum
 supported extent. For reviews, never fork the implementation conversation. Use
 `fork_turns: "none"` where supported, or the host's documented equivalent. Do not ask children
-to spawn more agents; root owns delegation and the finite budget.
+to spawn more agents; root owns delegation and keeps it proportionate to the task.
 
 For consequential changes, use [independent review](../review/SKILL.md) after ordinary
 verification. Dispatch a separate [adjudicator](../adjudicate/SKILL.md) only when a
