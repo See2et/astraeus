@@ -75,6 +75,44 @@ The worktree must already be trusted by Claude Code and the CLI must already be
 authenticated. A noninteractive background launch cannot accept a workspace trust
 dialog. Failed dispatch retains the handoff for inspection; do not blindly relaunch.
 
+### Launch evidence and recovery
+
+CLI presence and successful capability/help checks establish supported options only;
+they do not establish account authentication, workspace trust, or a successful live
+dispatch. The state file binds the request before the launch command runs and survives
+a failed launch. Its existence, including an assigned session UUID, is not evidence
+that Claude started. Keep requested launch, command outcome, and observed exact-session
+state distinct.
+
+When invoking the bridge through an asynchronous host tool, retain the whole tool
+result, including its running-cell/process handle, exit code, and output. If it yields,
+resume that same invocation through the host's supported wait/poll interface until its
+completion or failure is captured; extracting only the initial output can discard the
+handle needed to retrieve launch stderr. A missing session is a symptom, not a diagnosis:
+inspect the original launch's exit code and stderr before considering another launch.
+If diagnostic output was lost, disclose that uncertainty rather than assigning a cause
+from the state file or an empty session listing.
+
+A zero launch exit code still needs exact-session verification. If the requested UUID
+is absent but a session appears in the dedicated worktree, preserve the launch output
+and compare the reported identifiers before recovery. Do not relaunch, rewrite the
+state UUID, or automatically bind by cwd alone: another session's identity is not
+proved by sharing the directory. Treat that mismatch as an unresolved compatibility
+issue; use only supported CLI inspection and evidence for that specific candidate.
+
+If launch stderr reports `Workspace not trusted`, give the user the exact dedicated
+worktree path and ask them to run `claude` interactively from that directory to approve
+its trust dialog. Trust in the main checkout is not evidence that the delegated
+worktree is trusted. Do not approve trust on the user's behalf, change authentication,
+relax permission restrictions, or use a print/API fallback. After the user confirms
+approval, preserve the failed handoff and first verify that its exact session is absent
+and the worktree remains clean. A single new dispatch may then use a new dedicated
+control directory with the authorized request and the same trusted worktree; retain
+its outcome and check its exact session. If a session exists or files changed, inspect
+that state before recovery to avoid duplicate work. Further failure requires its own
+diagnosis, not a retry loop. User approval to resolve trust continues the already
+authorized task; it does not authorize a different inference mode or broader ownership.
+
 ## Observe, collect, and stop
 
 ```sh
@@ -127,6 +165,16 @@ Local help was checked with Claude Code 2.1.223 for `--bg`, `--session-id`, perm
 controls, `agents --json --all`, and `stop <id>`. The bridge checks capabilities before
 dispatch/stop. Mocked integration and real Git tests do not establish that a live
 background inference succeeds with every account or future CLI version.
+
+In a live Claude Code 2.1.288 run, after worktree trust approval, `start --apply`
+returned exit code zero while `agents --json --all` showed a working session in the
+same dedicated cwd with a different `sessionId` from the requested `--session-id`.
+The bridge therefore reported the requested exact session missing. This observation
+does not establish why the identifiers differed or that all 2.1.288 launches behave
+this way. The bridge currently discards successful launch stdout, so its returned
+state alone cannot resolve such a mismatch; do not claim verified session identity
+from that state. A bridge compatibility fix requires captured launch output and a
+supported, unambiguous identity binding, rather than relaxing the exact-session check.
 
 Primary references: [agent view and background lifecycle](https://code.claude.com/docs/en/agent-view),
 [CLI output and permission options](https://code.claude.com/docs/en/cli-reference), and
