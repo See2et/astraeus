@@ -17,6 +17,8 @@ from pathlib import Path, PurePosixPath
 import shlex
 import re
 import sys
+import os
+import subprocess
 import uuid
 
 import astraeus as a
@@ -25,6 +27,19 @@ import astraeus as a
 SCOPES = {"design-direction", "ui-implementation"}
 DENY = ["Agent", "Task", "Bash(git push *)", "Bash(git -C * push *)",
         "Bash(gh *)", "Bash(glab *)", "Bash(curl *)", "Bash(wget *)"]
+
+
+def dispatch_call(argv, root):
+    return subprocess.run(argv, cwd=root, capture_output=True, text=True, check=False)
+
+
+def launch_id(output):
+    # Documented --bg output, not a cwd/time heuristic or a private session database.
+    plain = re.sub(r"\x1b\[[0-9;]*m", "", output)
+    matches = re.findall(r"^backgrounded · ([a-f0-9]{8})(?: · [^\r\n]*)?\s*$", plain, re.MULTILINE)
+    if len(matches) != 1:
+        raise ValueError("unknown or ambiguous background launch output; inspect launch.json, do not relaunch")
+    return matches[0]
 
 
 def digest(path):
@@ -135,34 +150,36 @@ def start(request_path, worktree_path, state_path, user_requested=False, apply=F
     capabilities(effort="effort" in req)
     session_id = str(uuid.uuid4())
     report = statepath.parent / "result.json"
-    if report == reqpath or statepath == report or statepath == reqpath:
+    if reqpath in (report, Path(str(report) + ".tmp")) or statepath in (report, Path(str(report) + ".tmp")) or statepath == reqpath:
         raise ValueError("request, state and result.json must be distinct")
     target = a.target_id(root)
-    metadata = dict(version=1, request=str(reqpath), request_sha256=digest(reqpath),
+    launchpath = statepath.parent / "launch.json"
+    stoppath = statepath.parent / "stop.json"
+    if any(p in (reqpath, statepath) for p in (launchpath, stoppath)):
+        raise ValueError("launch.json and stop.json are reserved for lifecycle evidence")
+    metadata = dict(version=2, report_finalizer="root", request=str(reqpath), request_sha256=digest(reqpath),
                     worktree=str(root), base_head=git(root, "rev-parse", "HEAD"),
                     target_id=target, task_id=req["task_id"], session_id=session_id, report=str(report))
     allows = ["Read", "Glob", "Grep"]
     for name in req["owned_paths"]:
         absolute = contained(root, name)
         allows += [f"Edit(/{absolute})", f"Edit(/{absolute}/**)"]
-    allows += [f"Edit(/{report})", f"Edit(/{report}.tmp)"]
+    allows += [f"Edit(/{report}.tmp)"]
     allows += [f"Bash({command})" for command in req["checks"]]
-    denies = DENY + [f"Edit(/{reqpath})", f"Edit(/{statepath})"]
+    denies = DENY + [f"Edit(/{reqpath})", f"Edit(/{statepath})", f"Edit(/{launchpath})", f"Edit(/{stoppath})", f"Edit(/{report})"]
     settings = {"permissions": {"defaultMode": "dontAsk", "allow": allows, "deny": denies}}
     schema = a.read_json(a.PLUGIN / "schemas" / "implementation.json")
     prompt = ("Implement only this explicitly authorized design task in the current existing linked worktree. "
               "Do not create another worktree, commit, push, open a PR, publish, or dispatch additional agents. "
               "Do not edit the request/state or anything outside owned_paths, except the report. "
               "Run the declared checks; failed or denied checks must be reported truthfully. "
-              "Finish by writing the implementation JSON report to " + str(report) + ".tmp then atomically "
-              "rename it to " + str(report) + ". If rename is denied, report blocked; never claim completion. "
+              "Finish by writing the implementation JSON report to " + str(report) + ".tmp. "
+              "Root owns validation and atomic publication to result.json; do not rename or write result.json. "
+              "Report complete only when the authorized work and required checks are complete, with no remaining work. "
+              "An empty checks request needs checks: []; do not invent a not_run check. "
               "Use task_id=" + json.dumps(req["task_id"]) + " and dispatch target_id=" + json.dumps(target) +
               "; this is a dispatch binding, not final acceptance. changed_files must list every actual change. "
               "Report schema: " + json.dumps(schema) + "\nRequest: " + json.dumps(req))
-    # The exact atomic rename is authorized in addition to requested checks.
-    rename = "mv -- " + shlex.quote(str(report) + ".tmp") + " " + shlex.quote(str(report))
-    allows.append(f"Bash({rename})")
-    prompt += "\nAtomic report rename command: " + rename
     argv = ["claude", "--bg", "--safe-mode", "--session-id", session_id, "--model", req["model"],
             "--permission-mode", "dontAsk", "--setting-sources", "", "--settings", json.dumps(settings),
             "--tools", "Read,Edit,Write,Glob,Grep,Bash", "--allowedTools", *allows,
@@ -174,15 +191,25 @@ def start(request_path, worktree_path, state_path, user_requested=False, apply=F
     if apply:
         # Keep the binding even if dispatch fails; root must inspect, never retry blindly.
         a.atomic_write(statepath, json.dumps(metadata, indent=2) + "\n")
-        a.run(argv, cwd=root)
+        launched = dispatch_call(argv, root)
+        evidence = dict(version=1, requested_session_id=session_id, returncode=launched.returncode,
+                        stdout=launched.stdout, stderr=launched.stderr)
+        a.atomic_write(launchpath, json.dumps(evidence, indent=2) + "\n")
+        if launched.returncode:
+            raise ValueError(f"background launch failed ({launched.returncode}); see {launchpath}\n{launched.stderr.strip()}")
+        launch_id(launched.stdout)
     return {"applied": apply, "state": metadata, "argv": argv, "final_acceptance": False}
 
 
 def load_state(path):
     state = a.read_json(path)
     keys = {"version", "request", "request_sha256", "worktree", "base_head", "target_id", "task_id", "session_id", "report"}
-    if not isinstance(state, dict) or set(state) != keys or state["version"] != 1:
+    if isinstance(state, dict) and state.get("version") == 2:
+        keys.add("report_finalizer")
+    if not isinstance(state, dict) or set(state) != keys or state["version"] not in (1, 2):
         raise ValueError("unknown or malformed handoff state")
+    if state["version"] == 2 and state["report_finalizer"] != "root":
+        raise ValueError("unknown report finalizer")
     if any(not isinstance(state[key], str) or not state[key] for key in keys - {"version"}):
         raise ValueError("malformed handoff state fields")
     if str(uuid.UUID(state["session_id"])) != state["session_id"]:
@@ -207,8 +234,21 @@ def session(state, root):
     records = a.parse_json(a.run(["claude", "agents", "--json", "--all"], cwd=root))
     if not isinstance(records, list):
         raise ValueError("unknown agents JSON format")
-    matches = [r for r in records if isinstance(r, dict) and
-               (r.get("sessionId", r.get("session_id", r.get("id"))) == state["session_id"])]
+    if state["version"] == 2:
+        launchpath = Path(state["report"]).parent / "launch.json"
+        if launchpath.is_symlink():
+            raise ValueError("symlinked launch evidence")
+        evidence = a.read_json(launchpath)
+        if (not isinstance(evidence, dict) or set(evidence) != {"version", "requested_session_id", "returncode", "stdout", "stderr"}
+                or evidence["version"] != 1 or type(evidence["returncode"]) is not int or evidence["returncode"] != 0
+                or evidence["requested_session_id"] != state["session_id"]
+                or not all(isinstance(evidence[k], str) for k in ("stdout", "stderr"))):
+            raise ValueError("failed or mismatched launch evidence")
+        exact_id = launch_id(evidence["stdout"])
+        matches = [r for r in records if isinstance(r, dict) and r.get("id") == exact_id]
+    else:
+        matches = [r for r in records if isinstance(r, dict) and
+                   (r.get("sessionId", r.get("session_id", r.get("id"))) == state["session_id"])]
     if len(matches) != 1:
         raise ValueError("exact session is missing or ambiguous; no unrelated sessions returned")
     found = matches[0]
@@ -220,8 +260,12 @@ def session(state, root):
         raise ValueError("unknown exact-session stop ID")
     if sum(isinstance(r, dict) and r.get("id") == stop_id for r in records) != 1:
         raise ValueError("ambiguous exact-session stop ID")
-    return {"session_id": state["session_id"], "id": stop_id, "cwd": str(root),
-            "state": found.get("state"), "status": found.get("status"), "waitingFor": found.get("waitingFor")}
+    actual_id = found.get("sessionId", found.get("session_id")) if state["version"] == 2 else state["session_id"]
+    if state["version"] == 2:
+        if not isinstance(actual_id, str) or str(uuid.UUID(actual_id)) != actual_id or not actual_id.startswith(stop_id + "-"):
+            raise ValueError("launch short ID does not bind a full session UUID")
+    return {"session_id": actual_id, "requested_session_id": state["session_id"], "id": stop_id, "cwd": str(root),
+            "state": found.get("state"), "status": found.get("status"), "pid": found.get("pid"), "waitingFor": found.get("waitingFor")}
 
 
 def status(state_path):
@@ -229,15 +273,37 @@ def status(state_path):
     return session(state, root)
 
 
-def result(state_path):
+def acknowledged_stop(state, observed):
+    """Affirmative root-captured stop evidence for CLI records without live status."""
+    if observed["state"] != "stopped" or observed["status"] is not None or observed["pid"] is not None:
+        return False
+    path = Path(state["report"]).parent / "stop.json"
+    if path.is_symlink() or not path.is_file():
+        return False
+    receipt = a.read_json(path)
+    keys = {"version", "requested_session_id", "session_id", "id", "returncode", "stdout", "stderr"}
+    return (isinstance(receipt, dict) and set(receipt) == keys and receipt["version"] == 1
+            and receipt["requested_session_id"] == state["session_id"]
+            and receipt["session_id"] == observed["session_id"] and receipt["id"] == observed["id"]
+            and type(receipt["returncode"]) is int and receipt["returncode"] == 0
+            and isinstance(receipt["stderr"], str) and isinstance(receipt["stdout"], str)
+            and receipt["stdout"].strip() == f"stopped {observed['id']}")
+
+
+def result(state_path, apply=False):
     state, req, root = load_state(state_path)
     observed = session(state, root)
-    if observed["state"] != "done":
+    completed = ((observed["state"] in ("done", "stopped") and observed["status"] == "idle")
+                 or acknowledged_stop(state, observed)) if state["version"] == 2 else observed["state"] == "done"
+    if not completed:
         raise ValueError("session is not completed (or its status format is unknown)")
     report = Path(state["report"])
-    if report.is_symlink() or not report.is_file() or report.stat().st_mtime_ns <= Path(state_path).stat().st_mtime_ns:
+    pending = state["version"] == 2 and not report.exists() and not report.is_symlink()
+    candidate = Path(str(report) + ".tmp") if pending else report
+    if candidate.is_symlink() or not candidate.is_file() or candidate.stat().st_mtime_ns <= Path(state_path).stat().st_mtime_ns:
         raise ValueError("missing, symlinked or stale report")
-    data = a.load_result(report, "implementation", state["task_id"], state["target_id"])
+    original = candidate.read_bytes()
+    data = a.load_result(candidate, "implementation", state["task_id"], state["target_id"])
     if data["status"] != "complete" or data["remaining"]:
         raise ValueError("implementation report is incomplete")
     checks = {c["command"]: c for c in data["checks"]}
@@ -257,8 +323,17 @@ def result(state_path):
             raise ValueError(f"out-of-ownership Git delta: {changed}")
     if set(data["changed_files"]) != delta or len(data["changed_files"]) != len(delta):
         raise ValueError("report changed_files does not match actual committed/unstaged/untracked delta")
+    target = a.target_id(root)
+    if apply and pending:
+        # Publish exactly the validated bytes; never upgrade blocked/incomplete reports.
+        if session(state, root) != observed or a.target_id(root) != target or candidate.is_symlink() or candidate.read_bytes() != original:
+            raise ValueError("session, source target or report changed during collection")
+        # Exclusive creation avoids overwriting another final report, including a symlink.
+        os.link(candidate, report, follow_symlinks=False)
+        candidate.unlink()
     return {"valid": True, "final_acceptance": False, "dispatch_target_id": state["target_id"],
-            "review_target_id": a.target_id(root), "changed_files": sorted(delta), "result": data}
+            "review_target_id": target, "changed_files": sorted(delta), "result": data,
+            "report_finalized": not pending or apply, "applied": apply and pending}
 
 
 def cancel(state_path, apply=False):
@@ -267,7 +342,18 @@ def cancel(state_path, apply=False):
     capabilities(cancel=True)
     argv = ["claude", "stop", observed["id"]]
     if apply:
-        a.run(argv, cwd=root)
+        if state["version"] == 2:
+            path = Path(state["report"]).parent / "stop.json"
+            if path.is_symlink():
+                raise ValueError("symlinked stop evidence")
+            stopped = dispatch_call(argv, root)
+            receipt = dict(version=1, requested_session_id=state["session_id"], session_id=observed["session_id"],
+                           id=observed["id"], returncode=stopped.returncode, stdout=stopped.stdout, stderr=stopped.stderr)
+            a.atomic_write(path, json.dumps(receipt, indent=2) + "\n")
+            if stopped.returncode or stopped.stdout.strip() != f"stopped {observed['id']}":
+                raise ValueError(f"exact-session stop was not acknowledged; see {path}\n{stopped.stderr.strip()}")
+        else:
+            a.run(argv, cwd=root)
     return {"applied": apply, "argv": argv, "session": observed}
 
 
@@ -283,14 +369,14 @@ def main():
     for command in ("status", "result", "cancel"):
         cmd = sub.add_parser(command)
         cmd.add_argument("--state", required=True)
-        if command == "cancel":
+        if command in ("cancel", "result"):
             cmd.add_argument("--apply", action="store_true")
     args = parser.parse_args()
     try:
         if args.command == "start":
             output = start(args.request, args.worktree, args.state, args.user_requested, args.apply)
-        elif args.command == "cancel":
-            output = cancel(args.state, args.apply)
+        elif args.command in ("cancel", "result"):
+            output = globals()[args.command](args.state, args.apply)
         else:
             output = globals()[args.command](args.state)
         print(json.dumps(output, indent=2))

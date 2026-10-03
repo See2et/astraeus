@@ -108,6 +108,15 @@ state UUID, or automatically bind by cwd alone: another session's identity is no
 proved by sharing the directory. Treat that mismatch as an unresolved compatibility
 issue; use only supported CLI inspection and evidence for that specific candidate.
 
+New dispatches use version-2 state and retain the requested UUID unchanged. Root-owned
+`launch.json` records the launch's stdout, stderr, and exit code, including failures.
+The bridge reads the documented `backgrounded · <short-id>` line and requires one
+matching `agents` record with the dedicated cwd and a full UUID beginning with that
+short ID. Status distinguishes `requested_session_id` from observed `session_id`.
+Unknown output, ambiguous IDs, absent records, or changed cwd fail closed; inspect the
+retained evidence rather than relaunching. Existing version-1 state still requires
+the original requested UUID; old evidence is not automatically reconstructed.
+
 If launch stderr reports `Workspace not trusted`, give the user the exact dedicated
 worktree path and ask them to run `claude` interactively from that directory to approve
 its trust dialog. Trust in the main checkout is not evidence that the delegated
@@ -126,18 +135,27 @@ authorized task; it does not authorize a different inference mode or broader own
 ```sh
 python3 /path/to/plugin/scripts/claude_bridge.py status --state /path/to/control/dispatch.json
 uv run /path/to/plugin/scripts/claude_bridge.py result --state /path/to/control/dispatch.json
+uv run /path/to/plugin/scripts/claude_bridge.py result --state /path/to/control/dispatch.json --apply
 python3 /path/to/plugin/scripts/claude_bridge.py cancel --state /path/to/control/dispatch.json
 ```
 
 Cancel previews by default; `--apply` stops only the selected session and keeps its
 files and conversation. Status uses `claude agents --json --all` to select the exact
 session. It does not read private session databases or expose unrelated sessions.
+Version-2 `cancel --apply` captures the exact CLI stop's exit code and output in
+root-owned `stop.json`. Only exit zero with `stopped <bound-short-id>` acknowledges
+the stop; a failed or unknown acknowledgment is retained for diagnosis and cannot
+authorize publication. Claude is denied edits to this receipt.
 Unknown/missing state is not completion; report permission/input blocks and failures.
 Use the local CLI's supported session interface to follow up with the same Claude
 owner. No unbounded retries, automatic format repair, or respawn of all sessions.
 
-Claude writes its final implementation report to the specified control-directory
-`result.json`. Prose explanations and design artifacts may accompany it; the entire
+For new version-2 dispatches, Claude writes its completed implementation report to
+the specified control-directory `result.json.tmp`; root owns `result.json` and launch
+evidence. Claude needs no Bash rename permission. A pending report may say `complete`
+only if the work and checks are complete; report publication is root's responsibility.
+With no declared checks, use `checks: []`, not an invented `not_run` check.
+Prose explanations and design artifacts may accompany it; the entire
 conversation need not be JSON. `--json-schema` is print-only, so background dispatch
 uses a prompt contract plus post-validation, not generation-time enforcement. State
 JSON from `claude agents` describes lifecycle, not implementation results.
@@ -147,8 +165,17 @@ the supplied task ID and **initial dispatch target ID**. Root collection separat
 computes the **final review target ID** from actual Git state. Keep these identifiers
 distinct; reviewers/adjudicators use the final stable target. This avoids report
 self-hashing and does not let the child invent runtime receipts. Write the report
-only after edits and verification; use a temporary file and rename to avoid partial
-reads. A missing, malformed, stale, incomplete, or failed report is not a successful
+only after edits and verification. `result` previews validation; `result --apply`
+publishes the original validated bytes atomically without overwriting a final report.
+It requires an exact session in `done` or `stopped` state with supported `idle` status.
+For a `stopped` record omitting status and live pid, a matching successful root-captured
+stop receipt supplies affirmative freeze evidence. Missing status without that receipt,
+unknown status, or a live pid on this receipt-based path fails closed. The bridge
+rechecks the session, source target, and report before publication. Stop the exact
+writer first when its last completed turn remains `blocked`/idle. A `blocked` report
+is never upgraded to `complete`, even after stopping. Version-1 dispatches retain the
+old Claude-owned rename contract and require `done` plus an existing final report.
+A missing, malformed, stale, incomplete, or failed report is not a successful
 handoff.
 
 Result collection validates the contract and actual changes against the initial
@@ -177,12 +204,14 @@ background inference succeeds with every account or future CLI version.
 In a live Claude Code 2.1.288 run, after worktree trust approval, `start --apply`
 returned exit code zero while `agents --json --all` showed a working session in the
 same dedicated cwd with a different `sessionId` from the requested `--session-id`.
-The bridge therefore reported the requested exact session missing. This observation
-does not establish why the identifiers differed or that all 2.1.288 launches behave
-this way. The bridge currently discards successful launch stdout, so its returned
-state alone cannot resolve such a mismatch; do not claim verified session identity
-from that state. A bridge compatibility fix requires captured launch output and a
-supported, unambiguous identity binding, rather than relaxing the exact-session check.
+The version-1 bridge therefore reported the requested exact session missing and did
+not retain successful launch output. A subsequent live version-2 launch on 2.1.288
+captured the explicit stderr warning `--bg manages the session id; ignoring --session-id`
+and a stdout `backgrounded · <short-id>` line. This identifies the CLI's background
+ID behavior; use its emitted ID rather than assuming the requested UUID controls it.
+The version-2 bridge successfully matched that emitted short ID to the observed full
+session UUID and dedicated cwd. The earlier launch's missing output remains missing;
+the later evidence does not establish behavior for every future CLI version.
 
 In that run, Claude completed the design proposal but the required atomic report
 rename (`mv -- <control>/result.json.tmp <control>/result.json`) was denied by Bash
