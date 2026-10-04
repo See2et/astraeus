@@ -150,6 +150,25 @@ Unknown/missing state is not completion; report permission/input blocks and fail
 Use the local CLI's supported session interface to follow up with the same Claude
 owner. No unbounded retries, automatic format repair, or respawn of all sessions.
 
+For same-session background follow-up, run from the dedicated worktree:
+
+```sh
+claude --bg --resume ACTUAL_SESSION_UUID -- "Follow-up within the authorized task"
+```
+
+Use the observed full UUID, not the requested launch UUID. Omit configuration
+overrides, including model, effort, and the original permission/settings flags:
+the session retains its saved pinned configuration. In a live 2.1.288 run, repeating
+those flags with `--resume` started a copy; stderr explicitly said the existing
+session kept its saved options and the supplied flags caused the copy. Resuming
+without overrides returned the original short ID and reported waking the session
+with its saved model, effort, permission mode, and settings options. Retain this
+output and verify the original bound ID and cwd before proceeding; saved-option
+evidence does not itself reveal a host-observed model identity. If the CLI starts
+an unintended copy, stop that exact copied ID immediately, preserve the evidence,
+and inspect its changes before retrying the original session. Do not replace the
+bridge binding with the copy or relax permissions to force continuation.
+
 For new version-2 dispatches, Claude writes its completed implementation report to
 the specified control-directory `result.json.tmp`; root owns `result.json` and launch
 evidence. Claude needs no Bash rename permission. A pending report may say `complete`
@@ -168,13 +187,16 @@ self-hashing and does not let the child invent runtime receipts. Write the repor
 only after edits and verification. `result` previews validation; `result --apply`
 publishes the original validated bytes atomically without overwriting a final report.
 It requires an exact session in `done` or `stopped` state with supported `idle` status.
-For a `stopped` record omitting status and live pid, a matching successful root-captured
+For a `done` or `stopped` record omitting status and live pid, a matching successful root-captured
 stop receipt supplies affirmative freeze evidence. Missing status without that receipt,
 unknown status, or a live pid on this receipt-based path fails closed. The bridge
 rechecks the session, source target, and report before publication. Stop the exact
 writer first when its last completed turn remains `blocked`/idle. A `blocked` report
 is never upgraded to `complete`, even after stopping. Version-1 dispatches retain the
 old Claude-owned rename contract and require `done` plus an existing final report.
+In a live 2.1.288 run, stopping a completed resumed session retained `state: done`
+while omitting status and pid; the exact successful stop receipt is still required
+for that form, just as for a stopped record without process metadata.
 A missing, malformed, stale, incomplete, or failed report is not a successful
 handoff.
 

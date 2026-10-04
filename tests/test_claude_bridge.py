@@ -362,7 +362,7 @@ class BridgeTests(unittest.TestCase):
         receipt = self.control / "stop.json"
         captured = json.loads(receipt.read_text())
         self.assertEqual(captured["stdout"], "stopped abcd1234\n")
-        for updates in ({"status": "unknown"}, {"pid": 123}, {"state": "done"}):
+        for updates in ({"status": "unknown"}, {"pid": 123}, {"state": "working"}):
             original = dict(self.records[0])
             self.records[0].update(updates)
             with self.assertRaisesRegex(ValueError, "not completed"):
@@ -376,6 +376,27 @@ class BridgeTests(unittest.TestCase):
         original_bytes = candidate.read_bytes()
         self.assertTrue(b.result(self.state, True)["report_finalized"])
         self.assertEqual(Path(self.metadata["report"]).read_bytes(), original_bytes)
+
+    def test_done_record_without_process_status_requires_exact_successful_stop_receipt(self):
+        self.start()
+        (self.wt / "ui/index.html").write_text("after\n")
+        candidate = self.report()
+        # Live CLI retains done after stopping a completed, resumed conversation.
+        self.records[0].pop("status")
+        with self.assertRaisesRegex(ValueError, "not completed"):
+            b.result(self.state, True)
+        b.cancel(self.state, True)
+        self.records[0]["status"] = "unknown"
+        with self.assertRaisesRegex(ValueError, "not completed"):
+            b.result(self.state, True)
+        self.records[0].pop("status")
+        self.records[0]["pid"] = 123
+        with self.assertRaisesRegex(ValueError, "not completed"):
+            b.result(self.state, True)
+        self.records[0].pop("pid")
+        original = candidate.read_bytes()
+        self.assertTrue(b.result(self.state, True)["report_finalized"])
+        self.assertEqual(Path(self.metadata["report"]).read_bytes(), original)
 
     def test_failed_or_unknown_stop_ack_is_captured_but_never_authorizes_publication(self):
         self.start()

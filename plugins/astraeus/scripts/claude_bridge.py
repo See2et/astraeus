@@ -275,7 +275,7 @@ def status(state_path):
 
 def acknowledged_stop(state, observed):
     """Affirmative root-captured stop evidence for CLI records without live status."""
-    if observed["state"] != "stopped" or observed["status"] is not None or observed["pid"] is not None:
+    if observed["state"] not in ("done", "stopped") or observed["status"] is not None or observed["pid"] is not None:
         return False
     path = Path(state["report"]).parent / "stop.json"
     if path.is_symlink() or not path.is_file():
