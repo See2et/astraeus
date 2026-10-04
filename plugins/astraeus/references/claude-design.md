@@ -30,6 +30,30 @@ bypass, print/API fallback, or nested agent delegation is performed. Missing CLI
 capabilities or permissions are explicit errors, not permission to switch execution
 modes. Do not claim quota savings or observed Claude identity from a requested model.
 
+## Design handoff
+
+Hand off the user's intent, priorities, references, and actual functional, data,
+security, and external-contract constraints. Distinguish product outcomes from visual
+means: a goal such as excitement or ease of use does not prescribe a palette, layout,
+asset style, or animation. Leave composition, color, typography, assets, effects,
+motion, and timing to Opus unless the user explicitly chose them or concrete functional
+evidence requires a constraint. State that evidence when constraining a design choice;
+root's taste or an existing implementation constant is not such evidence.
+
+When the user requests a fresh design from first principles, treat earlier GPT-authored
+design directions and implementation details as hypotheses to reconsider, not user
+requirements. Preserve actual user decisions and required behavior. Supply reference
+artifacts for Opus to inspect and interpret; do not replace them with root's fixed
+aesthetic prescription. Keep discovery, design, implementation, and ordinary
+verification with the Claude owner within the assigned scope. Do not require a plan
+approval or root-selected visual solution before that owner can proceed.
+
+Native independent review and root acceptance still apply. Assess rendered results
+against the user's brief, references, and usable behavior, with evidence for functional
+constraints; do not turn GPT's preferred styling or implementation constants into
+acceptance gates. Return necessary fixes to the same owner without prescribing visual
+means unless the user's decision or concrete constraint requires them.
+
 ## Start
 
 Root prepares a clean, dedicated **linked Git worktree** at the source snapshot to

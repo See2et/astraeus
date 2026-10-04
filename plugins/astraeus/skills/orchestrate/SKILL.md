@@ -62,7 +62,10 @@ not measured quota savings or guarantees about model quality:
 | Root GPT-6.1 Sol | Handoff costs dominate, scope is still unclear, work is tightly coupled, or final integration/acceptance is needed. |
 
 Prioritize Astra for design direction, composition, typography, color, polish, and
-visual acceptance of screens, documents, slides, or other visual artifacts. Other
+visual acceptance of screens, documents, slides, or other visual artifacts. For an
+explicitly requested Claude design task, Opus owns those design choices under the
+[design handoff policy](../../references/claude-design.md#design-handoff); Astra's native
+review assesses the user brief and usable behavior, not a replacement aesthetic. Other
 models can implement a settled design or perform objective extraction/dimension checks.
 When appearance matters, GPT-6 Astra must inspect rendered artifacts; an implementation
 report is not visual acceptance. With a Sol root, delegate this judgment to a fresh Astra
